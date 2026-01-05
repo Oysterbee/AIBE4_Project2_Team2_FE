@@ -1,46 +1,68 @@
 import { navigate } from "../router.js";
-import { isLoggedIn, signup, login } from "../auth/auth.js";
 
 export function renderSignup(root) {
-  if (isLoggedIn()) {
-    navigate("/");
-    return;
-  }
-
   const wrap = document.createElement("div");
   wrap.className = "auth-wrap";
 
+  
   wrap.innerHTML = `
     <div class="auth-card card">
       <div class="auth-brand">
-        <div class="brand-mark" aria-hidden="true">MM</div>
+        <div class="brand-mark">MM</div>
         <div class="auth-title">회원가입</div>
       </div>
 
       <form class="auth-form" id="signupForm">
+
         <div class="auth-row">
-          <label class="auth-label" for="su-userId">아이디</label>
-          <input class="auth-input" id="su-userId" name="userId" autocomplete="username" required />
+          <label class="auth-label">아이디</label>
+          <input class="auth-input" name="username" required />
         </div>
 
         <div class="auth-row">
-          <label class="auth-label" for="su-nickname">닉네임</label>
-          <input class="auth-input" id="su-nickname" name="nickname" required />
+          <label class="auth-label">이름</label>
+          <input class="auth-input" name="name" required />
         </div>
 
         <div class="auth-row">
-          <label class="auth-label" for="su-major">소속/전공</label>
-          <input class="auth-input" id="su-major" name="major" placeholder="예: 고려대생" required />
+          <label class="auth-label">닉네임</label>
+          <input class="auth-input" name="nickname" required />
         </div>
 
         <div class="auth-row">
-          <label class="auth-label" for="su-password">비밀번호</label>
-          <input class="auth-input" id="su-password" name="password" type="password" autocomplete="new-password" required />
+          <label class="auth-label">이메일</label>
+          <input class="auth-input" name="email" type="email" required />
         </div>
 
         <div class="auth-row">
-          <label class="auth-label" for="su-password2">비밀번호 확인</label>
-          <input class="auth-input" id="su-password2" name="password2" type="password" autocomplete="new-password" required />
+          <label class="auth-label">회원 유형</label>
+          <select class="auth-input" name="role" required>
+            <option value="">선택</option>
+            <option value="STUDENT">학생</option>
+            <option value="MAJOR">전공자</option>
+            
+          </select>
+        </div>
+
+        <div class="auth-row">
+          <label class="auth-label">재학 상태</label>
+          <select class="auth-input" name="status" required>
+            <option value="">선택</option>
+            <option value="ENROLLED">재학</option>
+            <option value="GRADUATED">졸업</option>
+            
+            
+          </select>
+        </div>
+
+        <div class="auth-row">
+          <label class="auth-label">비밀번호</label>
+          <input class="auth-input" name="password" type="password" required />
+        </div>
+
+        <div class="auth-row">
+          <label class="auth-label">비밀번호 확인</label>
+          <input class="auth-input" name="password2" type="password" required />
         </div>
 
         <button class="auth-primary" type="submit">가입하기</button>
@@ -56,33 +78,68 @@ export function renderSignup(root) {
 
   toLogin.addEventListener("click", () => navigate("/login"));
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const fd = new FormData(form);
 
-    const userId = String(fd.get("userId") || "").trim();
-    const nickname = String(fd.get("nickname") || "").trim();
-    const major = String(fd.get("major") || "").trim();
-    const pw = String(fd.get("password") || "");
-    const pw2 = String(fd.get("password2") || "");
+    const username = fd.get("username")?.trim();
+    const name = fd.get("name")?.trim();
+    const nickname = fd.get("nickname")?.trim();
+    const email = fd.get("email")?.trim();
+    const role = fd.get("role");
+    const status = fd.get("status");
+    const password = fd.get("password");
+    const password2 = fd.get("password2");
 
-    if (pw !== pw2) {
+    // ✅ 프론트 최소 검증
+    if (!username || !name || !nickname || !email) {
+      alert("필수 항목을 모두 입력해라");
+      return;
+    }
+
+    if (password.length < 8) {
+      alert("비밀번호는 8자 이상이어야 한다");
+      return;
+    }
+
+    if (password !== password2) {
       alert("비밀번호 확인이 일치하지 않는다");
       return;
     }
 
-    const res = signup({ userId, password: pw, nickname, major });
-    if (!res.ok) {
-      alert(res.message || "회원가입에 실패했다");
-      return;
-    }
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/signup`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+            name,
+            nickname,
+            email,
+            role,
+            status,
+          }),
+        }
+      );
 
-    const loginRes = login({ userId, password: pw });
-    if (!loginRes.ok) {
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert(result.message || "회원가입 실패");
+        return;
+      }
+
+      alert("회원가입 완료");
       navigate("/login");
-      return;
+    } catch (err) {
+      console.error(err);
+      alert("서버 연결 오류");
     }
-
-    navigate("/");
   });
 }
