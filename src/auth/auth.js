@@ -42,9 +42,8 @@ export async function login({ username, password }) {
           email: userInfo.data.email,
           name: userInfo.data.name,
           nickname: userInfo.data.nickname,
-          memberType: userInfo.data.memberType,
-          memberStatus: userInfo.data.memberStatus,
           role: userInfo.data.role,
+          memberStatus: userInfo.data.memberStatus,
         };
         localStorage.setItem(KEY, JSON.stringify(session));
       }

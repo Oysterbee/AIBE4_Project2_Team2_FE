@@ -36,23 +36,12 @@ export function renderSignup(root) {
         </div>
 
         <div class="auth-row">
-          <label class="auth-label">회원 유형</label>
-          <select class="auth-input" name="role" required>
-            <option value="">선택</option>
-            <option value="STUDENT">학생</option>
-            <option value="MAJOR">전공자</option>
-            
-          </select>
-        </div>
-
-        <div class="auth-row">
           <label class="auth-label">재학 상태</label>
           <select class="auth-input" name="status" required>
             <option value="">선택</option>
             <option value="ENROLLED">재학</option>
             <option value="GRADUATED">졸업</option>
-            
-            
+            <option value="HIGHSCHOOL">고등학생</option>
           </select>
         </div>
 
@@ -88,7 +77,6 @@ export function renderSignup(root) {
     const name = fd.get("name")?.trim();
     const nickname = fd.get("nickname")?.trim();
     const email = fd.get("email")?.trim();
-    const role = fd.get("role");
     const status = fd.get("status");
     const password = fd.get("password");
     const password2 = fd.get("password2");
@@ -116,7 +104,6 @@ export function renderSignup(root) {
         name,
         nickname,
         email,
-        memberType: role,
         status,
       });
 
