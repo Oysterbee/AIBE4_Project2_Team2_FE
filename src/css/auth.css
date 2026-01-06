@@ -107,3 +107,69 @@
   font-size: 11px;
   color: var(--muted);
 }
+
+/* 소셜 로그인 */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-social-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.auth-social-btn {
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.auth-social-btn:hover {
+  transform: translateY(-0.5px);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-social-btn.google {
+  border-color: #EA4335;
+  color: #EA4335;
+}
+
+.auth-social-btn.google:hover {
+  background: rgba(234, 67, 53, 0.08);
+  border-color: #EA4335;
+}
+
+.auth-social-btn.github {
+  border-color: #24292e;
+  color: #24292e;
+}
+
+.auth-social-btn.github:hover {
+  background: rgba(36, 41, 46, 0.08);
+  border-color: #24292e;
+}
