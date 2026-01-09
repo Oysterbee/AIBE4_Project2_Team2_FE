@@ -16,15 +16,15 @@ export async function renderHome(root) {
 
   // 1. 백엔드에서 전공자 카드 목록 조회
   try {
-      const response = await fetch("/api/major-profiles");
-      if (response.ok) {
-          const json = await response.json();
-          state.profiles = json.data; // 백엔드 데이터 저장
-      } else {
-          console.error("전공자 목록 조회 실패");
-      }
+    const response = await fetch("/api/major-profiles");
+    if (response.ok) {
+      const json = await response.json();
+      state.profiles = json.data; // 백엔드 데이터 저장
+    } else {
+      console.error("전공자 목록 조회 실패");
+    }
   } catch (e) {
-      console.error("서버 통신 오류", e);
+    console.error("서버 통신 오류", e);
   }
 
   render();
@@ -91,7 +91,9 @@ export async function renderHome(root) {
     return { wrap, render };
 
     function normalize(s) {
-      return String(s || "").trim().toLowerCase();
+      return String(s || "")
+        .trim()
+        .toLowerCase();
     }
 
     function matches(profile, q) {
@@ -112,7 +114,7 @@ export async function renderHome(root) {
     }
 
     function getFilteredProfiles() {
-      const arr = Array.isArray(PROFILES) ? PROFILES : [];
+      const arr = Array.isArray(state.profiles) ? state.profiles : [];
       return arr.filter((p) => matches(p, state.query));
     }
 
@@ -135,7 +137,7 @@ export async function renderHome(root) {
       if (safePage === 1) {
         pageProfiles = profiles.slice(0, PAGE_SIZE - 1);
       } else {
-        const offset = (PAGE_SIZE - 1) + (safePage - 2) * PAGE_SIZE;
+        const offset = PAGE_SIZE - 1 + (safePage - 2) * PAGE_SIZE;
         pageProfiles = profiles.slice(offset, offset + PAGE_SIZE);
       }
 
@@ -145,13 +147,21 @@ export async function renderHome(root) {
         const insertAt = Math.min(APPLY_SLOT_INDEX, pageProfiles.length);
 
         const combined = [
-          ...pageProfiles.slice(0, insertAt).map((p) => ({ type: "profile", data: p })),
+          ...pageProfiles
+            .slice(0, insertAt)
+            .map((p) => ({ type: "profile", data: p })),
           { type: "apply" },
-          ...pageProfiles.slice(insertAt).map((p) => ({ type: "profile", data: p })),
+          ...pageProfiles
+            .slice(insertAt)
+            .map((p) => ({ type: "profile", data: p })),
         ];
 
         for (const card of combined) {
-          grid.appendChild(card.type === "apply" ? renderApplyCard() : renderProfileCard(card.data));
+          grid.appendChild(
+            card.type === "apply"
+              ? renderApplyCard()
+              : renderProfileCard(card.data)
+          );
         }
       } else {
         if (pageProfiles.length === 0) {
@@ -194,19 +204,20 @@ export async function renderHome(root) {
         // navigate(`/profile/${encodeURIComponent(String(pid))}`);
         navigate(`/major-profile/${encodeURIComponent(String(pid))}`);
       });
-      
-          // 프로필 이미지 처리
-      const avatarStyle = p.profileImageUrl 
-        ? `background-image: url('${p.profileImageUrl}'); background-size: cover;` 
-        : `background-color: #ddd;`; // 기본 이미지
 
+      // 프로필 이미지 처리
+      const avatarStyle = p.profileImageUrl
+        ? `background-image: url('${p.profileImageUrl}'); background-size: cover;`
+        : `background-color: #ddd;`; // 기본 이미지
 
       const top = document.createElement("div");
       top.className = "card-top";
       top.innerHTML = `
         <div class="card-avatar" aria-hidden="true"></div>
         <h3 class="card-title">${escapeHtml(p.name)}</h3>
-        <p class="card-sub">${escapeHtml(p.school)}<br />${escapeHtml(p.major)}</p>
+        <p class="card-sub">${escapeHtml(p.school)}<br />${escapeHtml(
+        p.major
+      )}</p>
       `;
       card.appendChild(top);
 

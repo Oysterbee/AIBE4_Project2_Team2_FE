@@ -68,7 +68,7 @@ export function renderApply(root) {
   // 1. 세션 스토리지에서 내 정보 조회 및 표시
   try {
     // 저장된 키 이름 확인 필요 (예: "user", "member", "memberInfo" 등)
-    const storedMember = sessionStorage.getItem("user");
+    const storedMember = localStorage.getItem("user");
 
     if (storedMember) {
       const member = JSON.parse(storedMember);
@@ -81,7 +81,7 @@ export function renderApply(root) {
       majorInput.value = member.major || "";
     } else {
       // 정보가 없으면 로그인 페이지로 보내거나 다시 조회 시도
-      console.warn("세션 스토리지에 회원 정보가 없습니다.");
+      console.warn("로컬 스토리지에 회원 정보가 없습니다.");
       // navigate("/login"); // 필요 시 주석 해제
     }
   } catch (e) {
