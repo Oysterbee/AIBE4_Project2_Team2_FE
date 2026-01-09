@@ -54,10 +54,13 @@ async function request(endpoint, options = {}) {
     config.headers["Accept"] = "application/json";
   }
 
-  const token = getAccessToken();
-  const tokenType = getTokenType();
-  if (token) {
-    config.headers["Authorization"] = `${tokenType} ${token}`;
+  // skipAuth 옵션이 없을 때만 Authorization 헤더 추가
+  if (!options.skipAuth) {
+    const token = getAccessToken();
+    const tokenType = getTokenType();
+    if (token) {
+      config.headers["Authorization"] = `${tokenType} ${token}`;
+    }
   }
 
   try {

@@ -57,7 +57,9 @@ export async function login({ username, password }) {
     return { ok: true, session };
   } catch (error) {
     if (error instanceof ApiError) {
-      return { ok: false, message: error.message };
+      // 백엔드의 상세 에러 메시지 추출
+      const errorMessage = error.data?.error?.message || error.data?.message || error.message;
+      return { ok: false, message: errorMessage };
     }
     return { ok: false, message: "서버 연결 오류" };
   }
@@ -67,7 +69,7 @@ export async function logout() {
   try {
     await api.post("/auth/logout");
   } catch (error) {
-    console.warn("로그아웃 API 호출 실패:", error);
+    console.error("로그아웃 API 호출 실패:", error);
   } finally {
     localStorage.removeItem(KEY);
   }
