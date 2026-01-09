@@ -9,8 +9,13 @@ import { renderFindUsername } from "./pages/find-username.js";
 import { renderFindPassword } from "./pages/find-password.js";
 
 import { renderApply } from "./pages/apply.js";
+import { renderMajorRoleRequest } from "./pages/major-role-requset.js";
+import { renderMajorRequestDetail } from "./pages/major-role-request-detail.js";
+
+import { renderMyMajorProfile } from "./pages/my-major-profile.js";
+
 import { renderRecommend } from "./pages/recommend.js";
-import { renderProfileDetail } from "./pages/profileDetail.js";
+import { renderProfileDetail } from "./pages/major-card-detail.js";
 import { renderManager } from "./pages/manager.js";
 
 const PUBLIC_PATHS = new Set(["/login", "/signup", "/oauth/callback", "/find-username", "/find-password"]);
@@ -19,6 +24,10 @@ const routes = {
   "/": renderHome,
   "/mypage": renderMyPage,
   "/apply": renderApply,
+  "/major-role-request": renderMajorRoleRequest,
+  "/major-request-detail/:id": renderMajorRequestDetail,
+  "/my-major-profile": renderMyMajorProfile,
+  "/majorCardDetail/:id": renderProfileDetail,
   "/recommend": renderRecommend,
   "/login": renderLogin,
   "/signup": renderSignup,
