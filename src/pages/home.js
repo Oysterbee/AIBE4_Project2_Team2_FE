@@ -1,4 +1,5 @@
 import { navigate } from "../router.js";
+import { api } from "../services/api.js";
 
 const PAGE_SIZE = 8;
 const APPLY_SLOT_INDEX = 2; // 0-based, 3번째 위치
@@ -15,12 +16,11 @@ export async function renderHome(root) {
 
   // 1. 백엔드에서 전공자 카드 목록 조회
   try {
-    const response = await fetch("/api/major-profiles");
-    if (response.ok) {
-      const json = await response.json();
-      state.profiles = json.data; // 백엔드 데이터 저장
+    const result = await api.get("/major-profiles");
+    if (result?.success) {
+      state.profiles = result.data; // 백엔드 데이터 저장
     } else {
-      console.error("전공자 목록 조회 실패");
+      console.error("전공자 목록 조회 실패:", result?.message);
     }
   } catch (e) {
     console.error("서버 통신 오류", e);

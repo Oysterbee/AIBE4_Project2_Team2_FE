@@ -1,4 +1,5 @@
 import { navigate } from "../router.js";
+import { getSession } from "../auth/auth.js";
 
 export function renderApply(root) {
   const wrap = document.createElement("div");
@@ -65,24 +66,20 @@ export function renderApply(root) {
   const schoolInput = wrap.querySelector("#school");
   const majorInput = wrap.querySelector("#major");
 
-  // 1. 세션 스토리지에서 내 정보 조회 및 표시
+  // 1. 세션에서 내 정보 조회 및 표시
   try {
-    // 저장된 키 이름 확인 필요 (예: "user", "member", "memberInfo" 등)
-    const storedMember = localStorage.getItem("user");
+    const session = getSession();
+    const member = session?.user;
 
-    if (storedMember) {
-      const member = JSON.parse(storedMember);
-
-      // 필드명 매핑 (저장된 JSON 구조에 따라 수정 필요)
-      usernameInput.value = member.username || member.id || "";
+    if (member) {
+      // 필드명 매핑
+      usernameInput.value = member.username || "";
       nameInput.value = member.name || "";
       nicknameInput.value = member.nickname || "";
-      schoolInput.value = member.university || member.school || "";
+      schoolInput.value = member.university || "";
       majorInput.value = member.major || "";
     } else {
-      // 정보가 없으면 로그인 페이지로 보내거나 다시 조회 시도
-      console.warn("로컬 스토리지에 회원 정보가 없습니다.");
-      // navigate("/login"); // 필요 시 주석 해제
+      console.warn("세션에 회원 정보가 없습니다.");
     }
   } catch (e) {
     console.error("회원 정보 파싱 오류:", e);
@@ -150,9 +147,8 @@ export function renderApply(root) {
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
-
-      let url = "/api/major-requests";
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+      let url = `${apiBaseUrl}/major-requests`;
       let method = "POST";
 
       if (resubmitId) {
@@ -160,11 +156,10 @@ export function renderApply(root) {
         method = "PUT";
       }
 
-      const response = await fetch("/api/major-requests", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      // 쿠키 기반 인증: Authorization 헤더 불필요, credentials: 'include'로 쿠키 자동 전송
+      const response = await fetch(url, {
+        method: method,
+        credentials: "include",
         body: submissionData,
       });
 

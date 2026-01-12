@@ -7,7 +7,9 @@ const KEY = "mm_user";
 function readUser() {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return { user };
   } catch {
     return null;
   }

@@ -1,4 +1,5 @@
 import { navigate } from "../router.js";
+import { api } from "../services/api.js";
 
 export async function renderMajorRequestDetail(root, params) {
 
@@ -25,27 +26,13 @@ export async function renderMajorRequestDetail(root, params) {
   backBtn.addEventListener("click", () => navigate("/major-profile")); // 목록 페이지로 이동
 
   try {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
+    const result = await api.get(`/major-requests/${requestId}`);
 
-    const response = await fetch(`/api/major-requests/${requestId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      const detail = json.data;
+    if (result?.success) {
+      const detail = result.data;
       renderDetail(detailContainer, detail);
     } else {
-      const errorText = await response.text();
-      detailContainer.innerHTML = `<div class="error">조회 실패: ${errorText}</div>`;
+      detailContainer.innerHTML = `<div class="error">조회 실패: ${result?.message || ""}</div>`;
     }
   } catch (error) {
     console.error("Error:", error);
