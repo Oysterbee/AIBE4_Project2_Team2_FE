@@ -1,4 +1,3 @@
-// import { PROFILES } from "../data/profiles.js";
 import { navigate } from "../router.js";
 import { api } from "../services/api.js";
 
