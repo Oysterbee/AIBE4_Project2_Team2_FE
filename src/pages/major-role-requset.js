@@ -1,4 +1,5 @@
 import { navigate } from "../router.js";
+import { api } from "../services/api.js";
 
 export async function renderMajorRoleRequest(root) {
   const wrap = document.createElement("div");
@@ -22,28 +23,13 @@ export async function renderMajorRoleRequest(root) {
   backBtn.addEventListener("click", () => navigate("/"));
 
   try {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
+    const result = await api.get("/major-requests/me");
 
-    const response = await fetch("/api/major-requests/me", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      const requests = json.data; // ApiResponse 구조 가정
-
+    if (result?.success) {
+      const requests = result.data;
       renderList(requestList, requests);
     } else {
-      const errorText = await response.text();
-      requestList.innerHTML = `<div class="error">조회 실패: ${errorText}</div>`;
+      requestList.innerHTML = `<div class="error">조회 실패: ${result?.message || ""}</div>`;
     }
   } catch (error) {
     console.error("Error:", error);
