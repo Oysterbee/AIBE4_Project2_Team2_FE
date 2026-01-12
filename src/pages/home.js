@@ -148,7 +148,6 @@ export async function renderHome(root) {
         pageProfiles = profiles.slice(0, PAGE_SIZE - 1);
       } else {
         const offset = PAGE_SIZE - 1 + (safePage - 2) * PAGE_SIZE;
-        const offset = PAGE_SIZE - 1 + (safePage - 2) * PAGE_SIZE;
         pageProfiles = profiles.slice(offset, offset + PAGE_SIZE);
       }
 
@@ -226,10 +225,6 @@ export async function renderHome(root) {
         // navigate(`/profile/${encodeURIComponent(String(pid))}`);
         navigate(`/major-profile/${encodeURIComponent(String(pid))}`);
       });
-
-      // 프로필 이미지 처리
-      const avatarStyle = p.profileImageUrl
-        ? `background-image: url('${p.profileImageUrl}'); background-size: cover;`
 
       // 프로필 이미지 처리
       const avatarStyle = p.profileImageUrl

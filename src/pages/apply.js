@@ -148,6 +148,8 @@ export function renderApply(root) {
     }
 
     try {
+      const sessionStr = localStorage.getItem("mm_session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
       const token = session?.accessToken;
 
       // 백엔드 엔드포인트 URL 조합
