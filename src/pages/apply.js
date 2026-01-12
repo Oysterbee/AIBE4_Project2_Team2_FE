@@ -65,27 +65,29 @@ export function renderApply(root) {
   const schoolInput = wrap.querySelector("#school");
   const majorInput = wrap.querySelector("#major");
 
-  // 1. 세션 스토리지에서 내 정보 조회 및 표시
+  // 1. 로컬 스토리지에서 내 정보 조회 및 표시
   try {
-    // 저장된 키 이름 확인 필요 (예: "user", "member", "memberInfo" 등)
-    const storedMember = sessionStorage.getItem("user");
+    const storedSession = localStorage.getItem("mm_session");
 
-    if (storedMember) {
-      const member = JSON.parse(storedMember);
+    if (storedSession) {
+      const session = JSON.parse(storedSession);
+      // mm_session 구조에 따라 session.user에서 데이터를 꺼내야 함
+      const user = session.user;
 
-      // 필드명 매핑 (저장된 JSON 구조에 따라 수정 필요)
-      usernameInput.value = member.username || member.id || "";
-      nameInput.value = member.name || "";
-      nicknameInput.value = member.nickname || "";
-      schoolInput.value = member.university || member.school || "";
-      majorInput.value = member.major || "";
+      if (user) {
+        // 로컬 스토리지 구조와 일치하는 필드명 매핑
+        usernameInput.value = user.username || "";
+        nameInput.value = user.name || "";
+        nicknameInput.value = user.nickname || "";
+        schoolInput.value = user.university || "";
+        majorInput.value = user.major || "";
+      }
     } else {
-      // 정보가 없으면 로그인 페이지로 보내거나 다시 조회 시도
-      console.warn("세션 스토리지에 회원 정보가 없습니다.");
-      // navigate("/login"); // 필요 시 주석 해제
+      console.warn("로컬 스토리지에 세션 정보가 없습니다.");
+      // navigate("/login");
     }
   } catch (e) {
-    console.error("회원 정보 파싱 오류:", e);
+    console.error("세션 데이터 파싱 오류:", e);
   }
 
   let resubmitId = null;
@@ -134,55 +136,60 @@ export function renderApply(root) {
     const file = fd.get("file");
     const intro = fd.get("intro");
 
+    // 1. FormData 구성 (백엔드 구조와 일치)
     const submissionData = new FormData();
+    const requestDto = { content: intro };
 
-    const requestDto = {
-      content: intro,
-    };
+    // JSON 파트를 명시적인 Blob으로 추가 (Content-Type 지정)
+    submissionData.append(
+      "request",
+      new Blob([JSON.stringify(requestDto)], {
+        type: "application/json",
+      })
+    );
 
-    const jsonBlob = new Blob([JSON.stringify(requestDto)], {
-      type: "application/json",
-    });
-    submissionData.append("request", jsonBlob);
-
-    if (file) {
+    if (file && file.size > 0) {
       submissionData.append("file", file);
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const sessionStr = localStorage.getItem("mm_session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      const token = session?.accessToken;
 
-      let url = "/api/major-requests";
-      let method = "POST";
+      // 백엔드 엔드포인트 URL 조합
+      const baseUrl = "http://localhost:8080/api"; // 본인의 백엔드 주소에 맞게 수정
+      let endpoint = resubmitId
+        ? `/major-requests/${resubmitId}`
+        : "/major-requests";
 
-      if (resubmitId) {
-        url += `/${resubmitId}`;
-        method = "PUT";
-      }
-
-      const response = await fetch("/api/major-requests", {
-        method: "POST",
+      // 2. api.js 대신 표준 fetch를 직접 사용
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method: resubmitId ? "PUT" : "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          // 주의: Content-Type은 절대로 적지 않습니다.
         },
         body: submissionData,
       });
 
-      if (response.ok) {
+      // 3. 응답 처리
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `서버 에러: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         alert("전공자 인증 요청이 완료되었습니다.");
         navigate("/");
       } else {
-        const errorText = await response.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          alert("요청 실패: " + (errorJson.message || errorText));
-        } catch {
-          alert("요청 실패: " + errorText);
-        }
+        alert("요청 실패: " + (result.message || "다시 시도해주세요."));
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("서버 통신 오류");
+      console.error("Error 상세:", error);
+      alert(`제출 중 오류 발생: ${error.message}`);
     }
   });
 }

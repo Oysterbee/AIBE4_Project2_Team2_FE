@@ -9,7 +9,7 @@ import { renderFindUsername } from "./pages/find-username.js";
 import { renderFindPassword } from "./pages/find-password.js";
 
 import { renderApply } from "./pages/apply.js";
-import { renderMajorRoleRequest } from "./pages/major-role-requset.js";
+import { renderMajorRoleRequest } from "./pages/major-role-request.js";
 import { renderMajorRequestDetail } from "./pages/major-role-request-detail.js";
 
 import { renderMyMajorProfile } from "./pages/my-major-profile.js";
@@ -18,14 +18,20 @@ import { renderRecommend } from "./pages/recommend.js";
 import { renderProfileDetail } from "./pages/major-card-detail.js";
 import { renderManager } from "./pages/manager.js";
 
-const PUBLIC_PATHS = new Set(["/login", "/signup", "/oauth/callback", "/find-username", "/find-password"]);
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/oauth/callback",
+  "/find-username",
+  "/find-password",
+]);
 
 const routes = {
   "/": renderHome,
   "/mypage": renderMyPage,
   "/apply": renderApply,
   "/major-role-request": renderMajorRoleRequest,
-  "/major-request-detail/:id": renderMajorRequestDetail,
+  "/major-role-request-detail/:id": renderMajorRequestDetail,
   "/my-major-profile": renderMyMajorProfile,
   "/majorCardDetail/:id": renderProfileDetail,
   "/recommend": renderRecommend,
@@ -34,8 +40,6 @@ const routes = {
   "/oauth/callback": renderOAuthCallback,
   "/find-username": renderFindUsername,
   "/find-password": renderFindPassword,
-  "/apply": renderApply,
-  "/recommend": renderRecommend,
   "/manager": renderManager,
 };
 
@@ -82,6 +86,15 @@ function route() {
     return;
   }
 
+  // 동적 라우트: /profile/:id
+  if (path.startsWith("/major-role-request-detail/")) {
+    const id = decodeURIComponent(
+      path.slice("/major-role-request-detail/".length)
+    );
+    renderMajorRequestDetail(view, { id });
+    return;
+  }
+
   const renderer = routes[path] || routes["/"];
   renderer(view);
 }
@@ -111,7 +124,9 @@ function syncRouteStyles(path) {
   const head = document.head;
 
   // 기존 라우트 스타일 제거
-  head.querySelectorAll('link[data-route-style="1"]').forEach((el) => el.remove());
+  head
+    .querySelectorAll('link[data-route-style="1"]')
+    .forEach((el) => el.remove());
 
   // 새 라우트 스타일 추가
   for (const href of files) {
@@ -124,13 +139,24 @@ function syncRouteStyles(path) {
 }
 
 function getCssFilesForPath(path) {
-  if (path === "/login" || path === "/signup" || path === "/oauth/callback" || path === "/find-username" || path === "/find-password") return ["src/css/auth.css"];
+  if (
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/oauth/callback" ||
+    path === "/find-username" ||
+    path === "/find-password"
+  )
+    return ["src/css/auth.css"];
   if (path === "/") return ["src/css/home.css"];
   if (path === "/mypage") return ["src/css/mypage.css"];
   if (path === "/apply") return ["src/css/apply.css"];
   if (path === "/recommend") return ["src/css/recommend.css"];
   if (path.startsWith("/profile/")) return ["src/css/profileDetail.css"];
   if (path === "/manager") return ["src/css/manager.css"];
+  if (path === "/major-role-request") return ["src/css/major-role-request.css"];
+  if (path.startsWith("/major-role-request-detail/"))
+    return ["src/css/major-role-request-detail.css"];
+  if (path === "/my-major-profile") return ["src/css/my-major-profile.css"];
   return [];
 }
 
@@ -145,7 +171,8 @@ function bindHeaderActions() {
   const menuLogout = document.getElementById("menuLogout");
 
   if (mypageBtn) mypageBtn.addEventListener("click", () => navigate("/mypage"));
-  if (managerBtn) managerBtn.addEventListener("click", () => navigate("/manager"));
+  if (managerBtn)
+    managerBtn.addEventListener("click", () => navigate("/manager"));
   if (logoutBtn)
     logoutBtn.addEventListener("click", async () => {
       await logout();
@@ -153,8 +180,16 @@ function bindHeaderActions() {
       navigate("/login");
     });
 
-  if (menuMyPage) menuMyPage.addEventListener("click", () => (closeUserMenu(), navigate("/mypage")));
-  if (menuManager) menuManager.addEventListener("click", () => (closeUserMenu(), navigate("/manager")));
+  if (menuMyPage)
+    menuMyPage.addEventListener(
+      "click",
+      () => (closeUserMenu(), navigate("/mypage"))
+    );
+  if (menuManager)
+    menuManager.addEventListener(
+      "click",
+      () => (closeUserMenu(), navigate("/manager"))
+    );
   if (menuLogout)
     menuLogout.addEventListener("click", async () => {
       await logout();
@@ -217,23 +252,25 @@ function syncHeaderUser() {
   const menuNick = document.getElementById("menuNickname");
 
   const links = document.getElementById("userLinks");
-  
+
   const isAuth = isLoggedIn();
 
   if (links) links.style.visibility = isAuth ? "visible" : "hidden";
 
-  const nick = session?.user?.nickname ? String(session.user.nickname) : "사용자";
+  const nick = session?.user?.nickname
+    ? String(session.user.nickname)
+    : "사용자";
   if (nickEl) nickEl.textContent = nick;
   if (deskNick) deskNick.textContent = nick;
   if (menuNick) menuNick.textContent = nick;
 
   // 매니저 버튼 visibility 처리
-  const isManager = session?.major === '관리자';
-  const managerBtn = document.getElementById('btnManager');
-  const menuManager = document.getElementById('menuManager');
+  const isManager = session?.major === "관리자";
+  const managerBtn = document.getElementById("btnManager");
+  const menuManager = document.getElementById("menuManager");
 
-  if(managerBtn) managerBtn.style.display = isManager ? '' : 'none';
-  if(menuManager) menuManager.style.display = isManager ? '' : 'none';
+  if (managerBtn) managerBtn.style.display = isManager ? "" : "none";
+  if (menuManager) menuManager.style.display = isManager ? "" : "none";
 }
 
 function closeUserMenu() {

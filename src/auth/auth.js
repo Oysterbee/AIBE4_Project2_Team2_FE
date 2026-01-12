@@ -34,7 +34,7 @@ export async function login({ username, password }) {
     localStorage.setItem(KEY, JSON.stringify(session));
 
     try {
-      const userInfo = await api.get("/members/me/detail");
+      const userInfo = await api.get("/members/me");
 
       if (userInfo?.success && userInfo?.data) {
         session.user = {
@@ -56,11 +56,39 @@ export async function login({ username, password }) {
       console.warn("사용자 정보 조회 실패:", error);
     }
 
+    try {
+      const requestInfo = await api.get("/major-requests/me");
+
+      // user 객체가 이미 세션에 생성되어 있다고 가정
+      if (session.user) {
+        if (
+          requestInfo?.success &&
+          Array.isArray(requestInfo.data) &&
+          requestInfo.data.length > 0
+        ) {
+          const latest = requestInfo.data[0];
+
+          // user 객체 안에 직접 추가
+          session.user.applicationStatus = latest.applicationStatus ?? "";
+          session.user.requestId = latest.id ?? null;
+          session.user.rejectReason = latest.reason ?? ""; // 반려 시 사유 확인용
+        } else {
+          // 신청 이력이 없는 경우
+          session.user.applicationStatus = "NONE";
+        }
+
+        // 최종적으로 한 번만 저장
+        localStorage.setItem(KEY, JSON.stringify(session));
+      }
+    } catch (error) {
+      console.warn("지원 정보 통합 실패:", error);
+    }
     return { ok: true, session };
   } catch (error) {
     if (error instanceof ApiError) {
       // 백엔드의 상세 에러 메시지 추출
-      const errorMessage = error.data?.error?.message || error.data?.message || error.message;
+      const errorMessage =
+        error.data?.error?.message || error.data?.message || error.message;
       return { ok: false, message: errorMessage };
     }
     return { ok: false, message: "서버 연결 오류" };

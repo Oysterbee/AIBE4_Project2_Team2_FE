@@ -1,5 +1,6 @@
 // import { PROFILES } from "../data/profiles.js";
 import { navigate } from "../router.js";
+import { api, ApiError } from "../services/api.js";
 
 const PAGE_SIZE = 8;
 const APPLY_SLOT_INDEX = 2; // 0-based, 3번째 위치
@@ -14,17 +15,25 @@ export async function renderHome(root) {
   const { wrap, render } = buildHome();
   root.appendChild(wrap);
 
-  // 1. 백엔드에서 전공자 카드 목록 조회
+  // home.js 내의 전공자 목록 조회 부분
   try {
-      const response = await fetch("/api/major-profiles");
-      if (response.ok) {
-          const json = await response.json();
-          state.profiles = json.data; // 백엔드 데이터 저장
-      } else {
-          console.error("전공자 목록 조회 실패");
-      }
+    // api.get은 이미 JSON 파싱된 결과를 반환하므로 await response.json()이 필요 없음
+    const result = await api.get("/major-profiles");
+
+    // 프로젝트 공통 응답 구조인 success 필드로 확인
+    if (result?.success) {
+      // 백엔드 ApiResponse<T>의 data 필드에 접근
+      state.profiles = result.data;
+      console.log("목록 조회 성공:", state.profiles);
+    } else {
+      // 백엔드에서 보낸 에러 메시지가 있다면 출력
+      console.error(
+        "전공자 목록 조회 실패:",
+        result?.message || "알 수 없는 오류"
+      );
+    }
   } catch (e) {
-      console.error("서버 통신 오류", e);
+    console.error("서버 통신 오류 (네트워크 에러 등):", e);
   }
 
   render();
@@ -91,7 +100,9 @@ export async function renderHome(root) {
     return { wrap, render };
 
     function normalize(s) {
-      return String(s || "").trim().toLowerCase();
+      return String(s || "")
+        .trim()
+        .toLowerCase();
     }
 
     function matches(profile, q) {
@@ -135,7 +146,7 @@ export async function renderHome(root) {
       if (safePage === 1) {
         pageProfiles = profiles.slice(0, PAGE_SIZE - 1);
       } else {
-        const offset = (PAGE_SIZE - 1) + (safePage - 2) * PAGE_SIZE;
+        const offset = PAGE_SIZE - 1 + (safePage - 2) * PAGE_SIZE;
         pageProfiles = profiles.slice(offset, offset + PAGE_SIZE);
       }
 
@@ -145,13 +156,21 @@ export async function renderHome(root) {
         const insertAt = Math.min(APPLY_SLOT_INDEX, pageProfiles.length);
 
         const combined = [
-          ...pageProfiles.slice(0, insertAt).map((p) => ({ type: "profile", data: p })),
+          ...pageProfiles
+            .slice(0, insertAt)
+            .map((p) => ({ type: "profile", data: p })),
           { type: "apply" },
-          ...pageProfiles.slice(insertAt).map((p) => ({ type: "profile", data: p })),
+          ...pageProfiles
+            .slice(insertAt)
+            .map((p) => ({ type: "profile", data: p })),
         ];
 
         for (const card of combined) {
-          grid.appendChild(card.type === "apply" ? renderApplyCard() : renderProfileCard(card.data));
+          grid.appendChild(
+            card.type === "apply"
+              ? renderApplyCard()
+              : renderProfileCard(card.data)
+          );
         }
       } else {
         if (pageProfiles.length === 0) {
@@ -194,19 +213,20 @@ export async function renderHome(root) {
         // navigate(`/profile/${encodeURIComponent(String(pid))}`);
         navigate(`/major-profile/${encodeURIComponent(String(pid))}`);
       });
-      
-          // 프로필 이미지 처리
-      const avatarStyle = p.profileImageUrl 
-        ? `background-image: url('${p.profileImageUrl}'); background-size: cover;` 
-        : `background-color: #ddd;`; // 기본 이미지
 
+      // 프로필 이미지 처리
+      const avatarStyle = p.profileImageUrl
+        ? `background-image: url('${p.profileImageUrl}'); background-size: cover;`
+        : `background-color: #ddd;`; // 기본 이미지
 
       const top = document.createElement("div");
       top.className = "card-top";
       top.innerHTML = `
         <div class="card-avatar" aria-hidden="true"></div>
         <h3 class="card-title">${escapeHtml(p.name)}</h3>
-        <p class="card-sub">${escapeHtml(p.school)}<br />${escapeHtml(p.major)}</p>
+        <p class="card-sub">${escapeHtml(p.school)}<br />${escapeHtml(
+        p.major
+      )}</p>
       `;
       card.appendChild(top);
 
@@ -234,18 +254,76 @@ export async function renderHome(root) {
       const card = document.createElement("article");
       card.className = "card";
 
+      // 1. 로컬 스토리지에서 세션 정보 및 지원 상태 가져오기
+      let applicationStatus = "";
+      try {
+        const storedSession = localStorage.getItem("mm_session");
+        if (storedSession) {
+          const session = JSON.parse(storedSession);
+          // 로그인 시 저장한 requestInfo 안의 상태값 확인
+          applicationStatus = session.user?.applicationStatus || "";
+        }
+      } catch (e) {
+        console.error("세션 파싱 오류:", e);
+      }
+
       const box = document.createElement("div");
       box.className = "card-cta";
+
+      // 2. 상태에 따른 UI 구성 설정 변수
+      let title = "전공자 지원하기";
+      let desc = "당신의 전공 경험을 공유하고<br />후배들에게 도움을 주세요!";
+      let btnText = "지원하기";
+      let targetPath = "/apply";
+      let isBtnDisabled = false;
+
+      // 3. 상태별 분기 처리 (백엔드에서 보내주는 문자열에 맞게 수정하세요)
+      switch (applicationStatus) {
+        case "PENDING":
+          title = "심사 진행 중";
+          desc = "전공자 인증 심사가 진행 중입니다.<br />조금만 기다려 주세요!";
+          btnText = "심사 현황 보기";
+          targetPath = "/major-role-request"; // 또는 마이페이지
+          break;
+
+        case "REJECTED":
+          title = "지원서 반려됨";
+          desc =
+            "인증 요청이 반려되었습니다.<br />사유를 확인하고 다시 시도해 주세요.";
+          btnText = "재신청 하기";
+          targetPath = "/major-role-request"; // 재신청 페이지 (반려 사유 등을 세션스토리지에 담아 이동)
+          break;
+
+        case "APPROVED":
+          title = "인증 완료";
+          desc =
+            "전공자 인증이 완료되었습니다!<br />당신의 지식을 공유해 보세요.";
+          btnText = "내 프로필 보기";
+          targetPath = "/major-role-request"; // 본인 프로필 상세 페이지
+          break;
+
+        default:
+          // 지원 이력이 없는 경우 기본값 유지
+          break;
+      }
+
       box.innerHTML = `
-        <h3>전공자 지원하기</h3>
-        <p>당신의 전공 경험을 공유하고<br />후배들에게 도움을 주세요!</p>
-      `;
+    <h3>${title}</h3>
+    <p>${desc}</p>
+  `;
 
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "cta-btn";
-      btn.textContent = "지원하기";
-      btn.addEventListener("click", () => navigate("/apply"));
+      btn.textContent = btnText;
+
+      if (isBtnDisabled) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+      }
+
+      btn.addEventListener("click", () => navigate(targetPath));
 
       box.appendChild(btn);
       card.appendChild(box);
