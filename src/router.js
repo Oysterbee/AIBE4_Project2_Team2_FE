@@ -120,29 +120,15 @@ function route() {
     return;
   }
 
-  const majorReqId = matchPath(path, "/major-request-detail/:id");
+  const majorReqId = matchPath(path, "/major-role-request-detail/:id");
   if (majorReqId) {
     renderMajorRequestDetail(view, { id: majorReqId.id });
     return;
   }
 
-  const majorCardId = matchPath(path, "/majorCardDetail/:id");
+  const majorCardId = matchPath(path, "/major-card-detail/:id");
   if (majorCardId) {
     renderProfileDetail(view, { id: majorCardId.id });
-    return;
-  }
-
-  if (path.startsWith("/major-role-request-detail/")) {
-    const id = decodeURIComponent(
-      path.slice("/major-role-request-detail/".length)
-    );
-    renderMajorRequestDetail(view, { id });
-    return;
-  }
-
-  if (path.startsWith("/major-card-detail/")) {
-    const id = decodeURIComponent(path.slice("/major-card-detail/".length));
-    renderProfileDetail(view, { id });
     return;
   }
 
@@ -230,10 +216,10 @@ function getCssFilesForPath(path) {
   if (p.startsWith("/mypage/")) return ["src/css/mypage.css"];
   if (p === "/apply") return ["src/css/apply.css"];
   if (p === "/recommend") return ["src/css/recommend.css"];
-  if (p.startsWith("/profile/")) return ["src/css/profileDetail.css"];
   if (p === "/manager") return ["src/css/manager.css"];
-  if (p.startsWith("/major-request-detail/")) return ["src/css/majorRoleRequestDetail.css"];
-  if (p.startsWith("/majorCardDetail/")) return ["src/css/profileDetail.css"];
+  if (p === "/major-role-request/") return ["src/css/major-role-request.css"];
+  if (p.startsWith("/major-role-request-detail/")) return ["src/css/major-role-request-detail.css"];
+  if (p.startsWith("/major-card-detail/")) return ["src/css/profileDetail.css"];
   return [];
 }
 
