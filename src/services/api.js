@@ -96,18 +96,9 @@ async function request(endpoint, options = {}) {
     config.headers["Accept"] = "application/json";
   }
 
-  // 인증 엔드포인트는 기본적으로 Authorization을 붙이지 않는다
-  const shouldSkipAuth = Boolean(options.skipAuth) || isAuthEndpoint(endpoint);
-
-  if (!shouldSkipAuth) {
-    const token = getAccessToken();
-    const tokenType = getTokenType();
-    if (token) {
-      config.headers["Authorization"] = `${tokenType} ${token}`;
-    }
-  } else {
-    delete config.headers["Authorization"];
-  }
+  // 쿠키 기반 인증: credentials: "include"로 쿠키가 자동 전송되므로 Authorization 헤더 불필요
+  // Authorization 헤더를 명시적으로 제거
+  delete config.headers["Authorization"];
 
   try {
     console.log(`🌐 API 요청: ${config.method} ${url}`);
