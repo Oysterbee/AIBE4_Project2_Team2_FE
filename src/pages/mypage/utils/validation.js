@@ -5,9 +5,6 @@ export function validateProfileUpdate(payload, me) {
   const nicknameMsg = getNicknameRuleMessage(payload.nickname);
   if (nicknameMsg) fieldErrors.nickname = nicknameMsg;
 
-  const emailMsg = getEmailRuleMessage(payload.email);
-  if (emailMsg) fieldErrors.email = emailMsg;
-
   if (payload.university != null && String(payload.university).length > 20) {
     fieldErrors.university = "대학교명은 20자 이하입니다.";
   }
@@ -103,6 +100,22 @@ export function getNewPasswordConfirmMessage(newPasswordRaw, confirmRaw) {
 
 function isLikelyLocalUser(me) {
   const provider = me?.authProvider ?? null;
-  if (!provider) return true;
-  return String(provider).toUpperCase() === "LOCAL";
+
+  // authProvider가 명시적으로 설정된 경우
+  if (provider) {
+    return String(provider).toUpperCase() === "LOCAL";
+  }
+
+  // fallback: username으로 판단 (소셜 로그인은 google_, github_, kakao_ 등으로 시작)
+  const username = me?.username ?? "";
+  const userStr = String(username).toLowerCase();
+  if (userStr.startsWith("google_") ||
+      userStr.startsWith("github_") ||
+      userStr.startsWith("kakao_") ||
+      userStr.startsWith("naver_")) {
+    return false; // 소셜 로그인 사용자
+  }
+
+  // 기본값: LOCAL 사용자로 간주
+  return true;
 }

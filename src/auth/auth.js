@@ -55,6 +55,7 @@ export async function login({ username, password }) {
           university: userInfo.data.university ?? "",
           major: userInfo.data.major ?? "",
           role: userInfo.data.role ?? "",
+          authProvider: userInfo.data.authProvider ?? "",
         };
 
         localStorage.setItem(KEY, JSON.stringify(user));
