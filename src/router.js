@@ -36,7 +36,9 @@ const routes = {
   "/mypage": renderMyPage,
   "/apply": renderApply,
   "/major-role-request": renderMajorRoleRequest,
+  "/major-role-request-detail/:id": renderMajorRequestDetail,
   "/my-major-profile": renderMyMajorProfile,
+  "/major-card-detail/:id": renderProfileDetail,
   "/recommend": renderRecommend,
   "/login": renderLogin,
   "/signup": renderSignup,
@@ -127,6 +129,20 @@ function route() {
   const majorCardId = matchPath(path, "/majorCardDetail/:id");
   if (majorCardId) {
     renderProfileDetail(view, { id: majorCardId.id });
+    return;
+  }
+
+  if (path.startsWith("/major-role-request-detail/")) {
+    const id = decodeURIComponent(
+      path.slice("/major-role-request-detail/".length)
+    );
+    renderMajorRequestDetail(view, { id });
+    return;
+  }
+
+  if (path.startsWith("/major-card-detail/")) {
+    const id = decodeURIComponent(path.slice("/major-card-detail/".length));
+    renderProfileDetail(view, { id });
     return;
   }
 

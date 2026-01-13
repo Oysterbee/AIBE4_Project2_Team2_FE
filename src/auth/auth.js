@@ -59,6 +59,7 @@ export async function login({ username, password }) {
 
         localStorage.setItem(KEY, JSON.stringify(user));
         console.log("✅ 사용자 정보 저장 완료:", user);
+        await loadApplicationStatus();
         return { ok: true, user };
       } else {
         console.error("❌ 사용자 정보 형식 오류:", userInfo);
@@ -70,7 +71,11 @@ export async function login({ username, password }) {
         console.error("  - Status:", error.status);
         console.error("  - Data:", error.data);
         console.error("  - Message:", error.message);
-        return { ok: false, message: error.data?.message || error.message || "사용자 정보 조회 실패" };
+        return {
+          ok: false,
+          message:
+            error.data?.message || error.message || "사용자 정보 조회 실패",
+        };
       }
       return { ok: false, message: "사용자 정보 조회 실패" };
     }
@@ -80,13 +85,46 @@ export async function login({ username, password }) {
       console.error("  - Status:", error.status);
       console.error("  - Data:", error.data);
       // 백엔드의 상세 에러 메시지 추출
-      const errorMessage = error.data?.error?.message || error.data?.message || error.message;
+      const errorMessage =
+        error.data?.error?.message || error.data?.message || error.message;
       return { ok: false, message: errorMessage };
     }
     return { ok: false, message: "서버 연결 오류" };
   }
 }
 
+export async function loadApplicationStatus() {
+  try {
+    const requestInfo = await api.get("/major-requests/me");
+
+    const rawData = localStorage.getItem(KEY);
+    if (!rawData) return { ok: false };
+
+    const user = JSON.parse(rawData);
+    if (
+      requestInfo?.success &&
+      Array.isArray(requestInfo.data) &&
+      requestInfo.data.length > 0
+    ) {
+      const latest = requestInfo.data[0];
+
+      user.applicationStatus = latest.applicationStatus ?? "";
+      user.requestId = latest.id ?? null;
+      user.rejectReason = latest.reason ?? "";
+    } else {
+      user.applicationStatus = "NONE";
+      user.requestId = null;
+    }
+
+    localStorage.setItem(KEY, JSON.stringify(user));
+
+    console.log("✅ 지원 상태 통합 완료:", user);
+    return { ok: true, user };
+  } catch (error) {
+    console.warn("⚠️ 지원 정보 통합 실패:", error);
+    return { ok: false, error };
+  }
+}
 export async function logout() {
   try {
     await api.post("/auth/logout");

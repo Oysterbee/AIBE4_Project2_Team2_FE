@@ -178,7 +178,9 @@
 }
 
 /* 로딩 및 에러 메시지 */
-.loading, .empty-message, .error {
+.loading,
+.empty-message,
+.error {
   text-align: center;
   padding: 40px;
   color: var(--muted);

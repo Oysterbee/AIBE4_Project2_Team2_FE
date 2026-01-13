@@ -56,6 +56,7 @@ export function renderApply(root) {
   `;
 
   root.appendChild(wrap);
+  const session = getSession();
 
   const form = wrap.querySelector("#applyForm");
   const cancelBtn = wrap.querySelector("#cancelBtn");
@@ -68,7 +69,6 @@ export function renderApply(root) {
 
   // 1. 세션에서 내 정보 조회 및 표시
   try {
-    const session = getSession();
     const member = session?.user;
 
     if (member) {
@@ -82,7 +82,7 @@ export function renderApply(root) {
       console.warn("세션에 회원 정보가 없습니다.");
     }
   } catch (e) {
-    console.error("회원 정보 파싱 오류:", e);
+    console.error("세션 데이터 파싱 오류:", e);
   }
 
   let resubmitId = null;
@@ -131,53 +131,56 @@ export function renderApply(root) {
     const file = fd.get("file");
     const intro = fd.get("intro");
 
+    // 1. FormData 구성 (백엔드 구조와 일치)
     const submissionData = new FormData();
+    const requestDto = { content: intro };
 
-    const requestDto = {
-      content: intro,
-    };
+    // JSON 파트를 명시적인 Blob으로 추가 (Content-Type 지정)
+    submissionData.append(
+      "request",
+      new Blob([JSON.stringify(requestDto)], {
+        type: "application/json",
+      })
+    );
 
-    const jsonBlob = new Blob([JSON.stringify(requestDto)], {
-      type: "application/json",
-    });
-    submissionData.append("request", jsonBlob);
-
-    if (file) {
+    if (file && file.size > 0) {
       submissionData.append("file", file);
     }
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
-      let url = `${apiBaseUrl}/major-requests`;
-      let method = "POST";
+      // 백엔드 엔드포인트 URL 조합
+      const baseUrl = "http://localhost:8080/api"; // 본인의 백엔드 주소에 맞게 수정
+      let endpoint = resubmitId
+        ? `/major-requests/${resubmitId}`
+        : "/major-requests";
 
-      if (resubmitId) {
-        url += `/${resubmitId}`;
-        method = "PUT";
-      }
-
-      // 쿠키 기반 인증: Authorization 헤더 불필요, credentials: 'include'로 쿠키 자동 전송
-      const response = await fetch(url, {
-        method: method,
-        credentials: "include",
+      // 2. api.js 대신 표준 fetch를 직접 사용
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method: resubmitId ? "PUT" : "POST",
         body: submissionData,
+        credentials: "include",
       });
 
-      if (response.ok) {
+      // 3. 응답 처리
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `서버 에러: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         alert("전공자 인증 요청이 완료되었습니다.");
+        if (session.user.applicationStatus == "NONE")
+          session.user.applicationStatus = "PENDING";
+        localStorage.setItem("mm_user", JSON.stringify(session.user));
         navigate("/");
       } else {
-        const errorText = await response.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          alert("요청 실패: " + (errorJson.message || errorText));
-        } catch {
-          alert("요청 실패: " + errorText);
-        }
+        alert("요청 실패: " + (result.message || "다시 시도해주세요."));
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("서버 통신 오류");
+      console.error("Error 상세:", error);
+      alert(`제출 중 오류 발생: ${error.message}`);
     }
   });
 }
