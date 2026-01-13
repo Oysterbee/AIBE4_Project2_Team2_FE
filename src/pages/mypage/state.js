@@ -19,7 +19,7 @@ const ENDPOINTS = {
   reviews: "/members/me/reviews/written",
   qna: "/mypage/qna",
   applied: "/members/me/interviews/applied",
-  completed: "/members/me/interviews/applied/completed",
+  completed: "/members/me/interviews/completed-without-review",
 };
 
 // rememberLastTab 기본값을 false로 둔다(항상 profile로 시작)
@@ -34,7 +34,7 @@ export function createMyPageState({ rememberLastTab = false } = {}) {
     _mePromise: null,
 
     activeTab: initialTab,
-    paging: { page: 0, size: 10 },
+    paging: { page: 0, size: 5 },
 
     // 마이페이지 진입 때 강제로 기본 탭으로 돌리고 싶을 때 호출한다
     resetToDefaultTab() {

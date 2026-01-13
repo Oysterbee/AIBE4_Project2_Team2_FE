@@ -3,7 +3,7 @@ import { api } from "../../services/api.js";
 
 function buildPageQuery({ page, size }) {
   const p = Number.isFinite(Number(page)) ? Number(page) : 0;
-  const s = Number.isFinite(Number(size)) ? Number(size) : 10;
+  const s = Number.isFinite(Number(size)) ? Number(size) : 5;
   return `?page=${encodeURIComponent(p)}&size=${encodeURIComponent(s)}`;
 }
 
@@ -29,11 +29,41 @@ export async function uploadProfileImage(file) {
 
 // 내가 작성한 후기 목록(페이지)
 export async function fetchWrittenReviewsPage({ page, size }) {
-  return api.get(`/members/me/reviews/written${buildPageQuery({ page, size })}`);
+  return api.get(
+    `/members/me/reviews/written${buildPageQuery({ page, size })}`
+  );
 }
 
 // 내가 작성한 후기 상세
 export async function fetchWrittenReviewDetail(reviewId) {
   const id = encodeURIComponent(String(reviewId));
   return api.get(`/members/me/reviews/written/${id}`);
+}
+
+// 내가 신청한 인터뷰 목록(페이지)
+export async function fetchAppliedInterviewPage({ page, size }) {
+  return api.get(
+    `/members/me/interviews/applied${buildPageQuery({ page, size })}`
+  );
+}
+
+// 내가 신청한 인터뷰 상세
+export async function fetchAppliedInterviewDetail(interviewId) {
+  const id = encodeURIComponent(String(interviewId));
+  return api.get(`/members/me/interviews/applied/${id}`);
+}
+
+// 완료된 인터뷰 목록(페이지)
+export async function fetchCompletedInterviewPage({ page, size }) {
+  return api.get(
+    `/members/me/interviews/completed-without-review${buildPageQuery({
+      page,
+      size,
+    })}`
+  );
+}
+
+export async function createInterviewReview(interviewId, payload = {}) {
+  const id = encodeURIComponent(String(interviewId));
+  return api.post(`/interviews/${id}/reviews`, payload);
 }
