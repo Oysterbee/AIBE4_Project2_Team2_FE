@@ -8,7 +8,6 @@ import {
 import {
   validateProfileUpdate,
   getNicknameRuleMessage,
-  getEmailRuleMessage,
   getPasswordRuleMessage,
   getNewPasswordConfirmMessage,
 } from "../utils/validation.js";
@@ -91,7 +90,6 @@ function clearErrors() {
   const ids = [
     "err_form",
     "err_nickname",
-    "err_email",
     "err_status",
     "err_university",
     "err_major",
@@ -103,7 +101,6 @@ function clearErrors() {
 
   const inputs = [
     "nickname",
-    "email",
     "statusSelect",
     "university",
     "major",
@@ -117,7 +114,6 @@ function clearErrors() {
 function applyValidationErrors(errData) {
   const map = {
     nickname: ["err_nickname", "nickname"],
-    email: ["err_email", "email"],
     status: ["err_status", "statusSelect"],
     university: ["err_university", "university"],
     major: ["err_major", "major"],
@@ -201,7 +197,6 @@ function applyClientFieldErrors(fieldErrors, fallbackMessage) {
 
   const map = {
     nickname: ["err_nickname", "nickname"],
-    email: ["err_email", "email"],
     status: ["err_status", "statusSelect"],
     university: ["err_university", "university"],
     major: ["err_major", "major"],
@@ -309,6 +304,24 @@ function template(me) {
   const safeUni = escapeHtml(me?.university || "");
   const safeMajor = escapeHtml(me?.major || "");
 
+  // 소셜 로그인 사용자 확인
+  const provider = me?.authProvider ?? null;
+  let isLocal = true;
+
+  if (provider) {
+    isLocal = String(provider).toUpperCase() === "LOCAL";
+  } else {
+    // fallback: username으로 판단
+    const username = me?.username ?? "";
+    const userStr = String(username).toLowerCase();
+    if (userStr.startsWith("google_") ||
+        userStr.startsWith("github_") ||
+        userStr.startsWith("kakao_") ||
+        userStr.startsWith("naver_")) {
+      isLocal = false;
+    }
+  }
+
   return `
   <div class="mypage-profile" aria-label="내 정보 수정">
     <div class="mypage-profile-head">
@@ -357,8 +370,8 @@ function template(me) {
         </div>
 
         <div class="mypage-field">
-          <label class="mypage-label mypage-label--required" for="email">이메일</label>
-          <input class="mypage-input" id="email" name="email" type="email" value="${safeEmail}" autocomplete="email" />
+          <label class="mypage-label" for="email">이메일</label>
+          <input class="mypage-input" id="email" name="email" type="email" value="${safeEmail}" autocomplete="email" disabled />
           <div class="mypage-error" id="err_email" aria-live="polite"></div>
         </div>
       </div>
@@ -383,6 +396,7 @@ function template(me) {
         </div>
       </div>
 
+      ${isLocal ? `
       <div class="mypage-grid mypage-grid-3">
         <div class="mypage-field">
           <label class="mypage-label mypage-label--required" for="currentPassword">현재 비밀번호</label>
@@ -402,6 +416,14 @@ function template(me) {
           <div class="mypage-error" id="err_newPasswordConfirm" aria-live="polite"></div>
         </div>
       </div>
+      ` : `
+      <div class="mypage-field">
+        <div class="mypage-label">비밀번호</div>
+        <div style="padding: 12px; background-color: #f8f9fa; border-radius: 4px; color: #6c757d; font-size: 14px;">
+          소셜 로그인 계정은 비밀번호 변경이 불가능합니다.
+        </div>
+      </div>
+      `}
 
       <div class="mypage-btn-row">
         <button class="mypage-save-btn" type="submit" id="btnSave">저장</button>
@@ -455,7 +477,6 @@ function bindProfileForm(state) {
     const nickname = String(
       document.getElementById("nickname")?.value || ""
     ).trim();
-    const email = String(document.getElementById("email")?.value || "").trim();
     const status = String(
       document.getElementById("statusSelect")?.value || ""
     ).trim();
@@ -477,7 +498,6 @@ function bindProfileForm(state) {
 
     const payload = {
       nickname,
-      email,
       currentPassword,
       newPassword: newPassword ? newPassword : null,
       status: status || null,
@@ -611,22 +631,33 @@ function bindProfileImage(state) {
 
 function bindLiveValidation(state) {
   const nick = document.getElementById("nickname");
-  const email = document.getElementById("email");
   const cp = document.getElementById("currentPassword");
   const np = document.getElementById("newPassword");
   const npc = document.getElementById("newPasswordConfirm");
 
-  if (!nick || !email) return;
+  if (!nick) return;
 
   const isLocal = (() => {
     const provider = state?.me?.authProvider ?? null;
-    if (!provider) return true;
-    return String(provider).toUpperCase() === "LOCAL";
+    if (provider) {
+      return String(provider).toUpperCase() === "LOCAL";
+    }
+
+    // fallback: username으로 판단
+    const username = state?.me?.username ?? "";
+    const userStr = String(username).toLowerCase();
+    if (userStr.startsWith("google_") ||
+        userStr.startsWith("github_") ||
+        userStr.startsWith("kakao_") ||
+        userStr.startsWith("naver_")) {
+      return false;
+    }
+
+    return true;
   })();
 
   const touched = {
     nickname: false,
-    email: false,
     currentPassword: false,
     newPassword: false,
     newPasswordConfirm: false,
@@ -634,16 +665,11 @@ function bindLiveValidation(state) {
 
   const render = () => {
     const nickVal = String(nick.value || "");
-    const emailVal = String(email.value || "");
 
     const nickMsg = touched.nickname ? getNicknameRuleMessage(nickVal) : "";
-    const emailMsg = touched.email ? getEmailRuleMessage(emailVal) : "";
 
     setError("err_nickname", nickMsg);
     setInvalid("nickname", Boolean(nickMsg));
-
-    setError("err_email", emailMsg);
-    setInvalid("email", Boolean(emailMsg));
 
     if (!cp || !np || !npc) return;
 
@@ -690,15 +716,6 @@ function bindLiveValidation(state) {
   });
   nick.addEventListener("input", () => {
     touched.nickname = true;
-    render();
-  });
-
-  email.addEventListener("focus", () => {
-    touched.email = true;
-    render();
-  });
-  email.addEventListener("input", () => {
-    touched.email = true;
     render();
   });
 
