@@ -7,6 +7,13 @@ import { openReviewDetailModal } from "./components/reviewDetailModal.js";
 import { openReviewEditModal } from "./components/reviewEditModal.js";
 import { fetchWrittenReviewDetail } from "./api.js";
 
+import { renderAppliedInterviewItem } from "./renderers/appliedInterview.js";
+import { openAppliedInterviewDetailModal } from "./components/appliedInterviewDetailModal.js";
+
+import { renderCompletedInterviewItem } from "./renderers/completedInterview.js";
+import { openReviewCreateModal } from "./components/reviewCreateModal.js";
+import { fetchAppliedInterviewDetail } from "./api.js";
+
 import { renderPagination } from "./pagination.js";
 import { startOverlayLoading, endOverlayLoading } from "../../utils/overlay.js";
 
@@ -26,6 +33,10 @@ export function initTabsSection(state) {
 
   window.addEventListener("mm:review-updated", async () => {
     if (state.activeTab === "reviews") await renderActiveTab();
+  });
+
+  window.addEventListener("mm:review-created", async () => {
+    if (state.activeTab === "completed") await renderActiveTab();
   });
 
   async function renderActiveTab() {
@@ -56,14 +67,27 @@ export function initTabsSection(state) {
           if (rid) itemsByReviewId.set(rid, it);
         }
         listEl.innerHTML = items.map(renderWrittenReviewItem).join("");
-      } else {
-        listEl.innerHTML = items.map(renderItemByTab(state.activeTab)).join("");
+        renderPagerAlways(res?.meta);
+        return;
       }
 
+      if (state.activeTab === "applied") {
+        listEl.innerHTML = items.map(renderAppliedInterviewItem).join("");
+        renderPagerAlways(res?.meta);
+        return;
+      }
+
+      if (state.activeTab === "completed") {
+        listEl.innerHTML = items.map(renderCompletedInterviewItem).join("");
+        renderPagerAlways(res?.meta);
+        return;
+      }
+
+      listEl.innerHTML = items.map(() => "").join("");
       renderPagerAlways(res?.meta);
     } catch {
       listEl.innerHTML = `<div class="empty">목록 조회에 실패했다</div>`;
-      renderPagerAlways({ page: 1, totalPages: 1 });
+      renderPagerAlways({ page: 0, totalPages: 1 });
     } finally {
       endOverlayLoading();
     }
@@ -75,62 +99,174 @@ export function initTabsSection(state) {
   }
 
   async function onListClick(e) {
-    if (state.activeTab !== "reviews") return;
+    const noDetail = e.target.closest?.('[data-no-detail="true"]');
 
-    const editBtn = e.target.closest?.('[data-action="open-review-edit"]');
-    if (editBtn) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (state.activeTab === "reviews") {
+      const editBtn = e.target.closest?.('[data-action="open-review-edit"]');
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      const reviewId = String(
-        editBtn.getAttribute("data-review-id") || ""
-      ).trim();
-      const interviewId = String(
-        editBtn.getAttribute("data-interview-id") || ""
-      ).trim();
-      if (!reviewId || !interviewId) return;
+        const reviewId = String(
+          editBtn.getAttribute("data-review-id") || ""
+        ).trim();
+        const interviewId = String(
+          editBtn.getAttribute("data-interview-id") || ""
+        ).trim();
+        if (!reviewId || !interviewId) return;
 
-      const item = itemsByReviewId.get(reviewId);
-      const rating = item?.review?.rating ?? 0;
-      const content = item?.review?.content ?? "";
+        const item = itemsByReviewId.get(reviewId);
+        const rating = item?.review?.rating ?? 0;
+        const content = item?.review?.content ?? "";
 
-      openReviewEditModal({ reviewId, interviewId, rating, content });
+        openReviewEditModal({ reviewId, interviewId, rating, content });
+        return;
+      }
+
+      if (noDetail) return;
+
+      const row = e.target.closest?.('[data-action="open-review-detail"]');
+      if (!row) return;
+
+      const reviewId = String(row.getAttribute("data-review-id") || "").trim();
+      if (!reviewId) return;
+
+      await openReviewDetailWithLoading(reviewId);
       return;
     }
 
-    const noDetail = e.target.closest?.('[data-no-detail="true"]');
-    if (noDetail) return;
+    if (state.activeTab === "applied") {
+      if (noDetail) return;
 
-    const row = e.target.closest?.('[data-action="open-review-detail"]');
-    if (!row) return;
+      const row = e.target.closest?.(
+        '[data-action="open-applied-interview-detail"]'
+      );
+      if (!row) return;
 
-    const reviewId = String(row.getAttribute("data-review-id") || "").trim();
-    if (!reviewId) return;
+      const interviewId = String(
+        row.getAttribute("data-interview-id") || ""
+      ).trim();
+      if (!interviewId) return;
 
-    await openDetailWithLoading(reviewId);
+      await openAppliedDetailWithLoading(interviewId);
+      return;
+    }
+
+    if (state.activeTab === "completed") {
+      const writeBtn = e.target.closest?.('[data-action="write-review"]');
+      if (writeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (writeBtn.hasAttribute("disabled")) return;
+
+        const interviewId = String(
+          writeBtn.getAttribute("data-interview-id") || ""
+        ).trim();
+        if (!interviewId) return;
+
+        openReviewCreateModal({ interviewId });
+        return;
+      }
+
+      if (noDetail) return;
+
+      const row = e.target.closest?.(
+        '[data-action="open-completed-interview-detail"]'
+      );
+      if (!row) return;
+
+      const interviewId = String(
+        row.getAttribute("data-interview-id") || ""
+      ).trim();
+      if (!interviewId) return;
+
+      await openAppliedDetailWithLoading(interviewId);
+      return;
+    }
   }
 
   async function onListKeydown(e) {
-    if (state.activeTab !== "reviews") return;
     if (e.key !== "Enter" && e.key !== " ") return;
 
-    const row = e.target.closest?.('[data-action="open-review-detail"]');
-    if (!row) return;
+    if (state.activeTab === "reviews") {
+      const row = e.target.closest?.('[data-action="open-review-detail"]');
+      if (!row) return;
+      e.preventDefault();
 
-    e.preventDefault();
+      const reviewId = String(row.getAttribute("data-review-id") || "").trim();
+      if (!reviewId) return;
 
-    const reviewId = String(row.getAttribute("data-review-id") || "").trim();
-    if (!reviewId) return;
+      await openReviewDetailWithLoading(reviewId);
+      return;
+    }
 
-    await openDetailWithLoading(reviewId);
+    if (state.activeTab === "applied") {
+      const row = e.target.closest?.(
+        '[data-action="open-applied-interview-detail"]'
+      );
+      if (!row) return;
+      e.preventDefault();
+
+      const interviewId = String(
+        row.getAttribute("data-interview-id") || ""
+      ).trim();
+      if (!interviewId) return;
+
+      await openAppliedDetailWithLoading(interviewId);
+      return;
+    }
+
+    if (state.activeTab === "completed") {
+      const writeBtn = e.target.closest?.('[data-action="write-review"]');
+      if (writeBtn) {
+        e.preventDefault();
+        if (writeBtn.hasAttribute("disabled")) return;
+
+        const interviewId = String(
+          writeBtn.getAttribute("data-interview-id") || ""
+        ).trim();
+        if (!interviewId) return;
+
+        openReviewCreateModal({ interviewId });
+        return;
+      }
+
+      const row = e.target.closest?.(
+        '[data-action="open-completed-interview-detail"]'
+      );
+      if (!row) return;
+      e.preventDefault();
+
+      const interviewId = String(
+        row.getAttribute("data-interview-id") || ""
+      ).trim();
+      if (!interviewId) return;
+
+      await openAppliedDetailWithLoading(interviewId);
+      return;
+    }
   }
 
-  async function openDetailWithLoading(reviewId) {
+  async function openReviewDetailWithLoading(reviewId) {
     try {
       startOverlayLoading();
       const res = await fetchWrittenReviewDetail(reviewId);
       if (!res?.success) throw new Error(res?.message || "detail failed");
       openReviewDetailModal(res.data);
+    } catch {
+      alert("상세 조회에 실패했다");
+    } finally {
+      endOverlayLoading();
+    }
+  }
+
+  async function openAppliedDetailWithLoading(interviewId) {
+    try {
+      startOverlayLoading();
+      const res = await fetchAppliedInterviewDetail(interviewId);
+      if (!res?.success) throw new Error(res?.message || "detail failed");
+      openAppliedInterviewDetailModal(res.data);
     } catch {
       alert("상세 조회에 실패했다");
     } finally {
@@ -165,36 +301,31 @@ export function initTabsSection(state) {
   }
 
   function renderPagerAlways(meta) {
-  const m = meta || {};
-  const totalPages = normalizeTotalPages(m); // 더 이상 2로 올리지 않는다
-  const page1 = normalizePage1(m, totalPages);
+    const m = meta || {};
+    const totalPages = normalizeTotalPages(m);
+    const page1 = normalizePage1(m, totalPages);
 
-  renderPagination(pagerEl, {
-    page: page1, // 1-based
-    totalPages,  // 1이면 버튼 1개만 나온다
-    onChange: async (nextPage1) => {
-      state.paging.page = Math.max(0, Number(nextPage1) - 1); // state는 0-based
-      await renderActiveTab();
-    },
-  });
-}
+    renderPagination(pagerEl, {
+      page: page1,
+      totalPages,
+      onChange: async (nextPage1) => {
+        state.paging.page = Math.max(0, Number(nextPage1) - 1);
+        await renderActiveTab();
+      },
+    });
+  }
 
-function normalizeTotalPages(meta) {
-  const tp = Number(meta?.totalPages);
-  if (Number.isFinite(tp) && tp > 0) return Math.trunc(tp);
-  return 1;
-}
+  function normalizeTotalPages(meta) {
+    const tp = Number(meta?.totalPages);
+    if (Number.isFinite(tp) && tp > 0) return Math.trunc(tp);
+    return 1;
+  }
 
-function normalizePage1(meta, totalPages) {
-  const p = Number(meta?.page);
-  const candidate = Number.isFinite(p) ? Math.trunc(p) + 1 : 1;
-  if (candidate < 1) return 1;
-  if (candidate > totalPages) return totalPages;
-  return candidate;
-}
-
-
-  function renderItemByTab() {
-    return () => "";
+  function normalizePage1(meta, totalPages) {
+    const p = Number(meta?.page);
+    const candidate = Number.isFinite(p) ? Math.trunc(p) + 1 : 1;
+    if (candidate < 1) return 1;
+    if (candidate > totalPages) return totalPages;
+    return candidate;
   }
 }

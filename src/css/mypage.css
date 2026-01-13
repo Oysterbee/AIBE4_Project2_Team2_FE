@@ -1147,3 +1147,280 @@
     margin-top: 10px;
   }
 }
+
+/* ACCEPTED: 파란색 */
+.mm-badge[data-tone="accepted"] {
+  background: rgba(59, 130, 246, 0.16);
+  color: rgba(37, 99, 235, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
+/* REJECT / REJECTED: 빨간색 */
+.mm-badge[data-tone="rejected"] {
+  background: rgba(239, 68, 68, 0.14);
+  color: rgba(220, 38, 38, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+/* PENDING: 공통 변수 --pastel-yellow 사용 */
+.mm-badge[data-tone="pending"] {
+  background: color-mix(in srgb, var(--pastel-yellow) 55%, white);
+  color: rgba(45, 45, 58, 0.86);
+  border: 1px solid
+    color-mix(in srgb, var(--pastel-yellow) 65%, rgba(45, 45, 58, 0.18));
+}
+
+/* =========================
+   Applied interview hero message
+========================= */
+.mm-hero2__message {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 45, 58, 0.1);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.mm-hero2__message-k {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.66);
+  margin-bottom: 6px;
+}
+
+.mm-hero2__message-v {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(45, 45, 58, 0.86);
+}
+
+/* src/css/mypage.css */
+
+/* 하단 한 줄: 내용 ... + 우측 요소 */
+.mypage-review-bottom {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: nowrap; /* 줄바꿈 방지 */
+}
+
+/* 상태 칩(수정하기 버튼 자리 대체): 무조건 우측 끝 */
+.mypage-status-chip {
+  margin-left: auto; /* 핵심 */
+  flex: 0 0 auto;
+  white-space: nowrap;
+  line-height: 1;
+  padding: 7px 10px;
+}
+
+/* 신청 인터뷰 목록: 아바타 기준으로 닉/학교/학과 텍스트를 세로 중앙 정렬 */
+.mypage-applied-item .mypage-review-left {
+  align-items: center;
+}
+
+.mypage-applied-item .mypage-review-head {
+  justify-content: center;
+}
+
+/* 상단 우측: status 칩을 보기 좋게 */
+.mypage-applied-item .mypage-review-meta {
+  justify-content: center;
+}
+
+.mypage-applied-item .mypage-status-chip {
+  align-self: center;
+  line-height: 1;
+  padding: 7px 10px;
+}
+
+/* 하단: 제목(스니펫) + 날짜(오른쪽) */
+.mypage-applied-bottom {
+  justify-content: space-between;
+}
+
+.mypage-applied-snippet {
+  max-width: none; /* 오른쪽 날짜 블록 때문에 calc로 제한하지 않고 flex로 처리 */
+}
+
+.mypage-applied-dates {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* src/css/mypage.css */
+
+.mypage-review-write-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.mypage-review-bottom .mypage-review-write-btn {
+  margin-left: 0;
+}
+
+/* reviewEditModal 전용 스타일을 reviewCreateModal에도 적용 */
+#reviewCreateModal .mm-modal__panel {
+  width: min(640px, calc(100% - 24px));
+  max-height: 86vh;
+}
+
+#reviewCreateModal .mm-modal__body {
+  padding: 16px;
+  padding-right: 14px;
+}
+
+#reviewCreateModal .mm-review-edit-stack {
+  gap: 12px;
+}
+
+#reviewCreateModal .mm-review-edit--vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#reviewCreateModal .mm-edit-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#reviewCreateModal .mm-star-picker--top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 45, 58, 0.12);
+  background: rgba(45, 45, 58, 0.03);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#reviewCreateModal .mm-star-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  color: rgba(45, 45, 58, 0.22);
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+#reviewCreateModal .mm-star-btn:hover {
+  background: rgba(45, 45, 58, 0.06);
+  transform: translateY(-1px);
+}
+
+#reviewCreateModal .mm-star-btn.is-on {
+  color: #fbbf24;
+}
+
+#reviewCreateModal .mm-star-btn:focus-visible {
+  outline: none;
+  border-color: rgba(45, 45, 58, 0.18);
+  box-shadow: 0 0 0 3px rgba(45, 45, 58, 0.12);
+  background: rgba(45, 45, 58, 0.06);
+}
+
+#reviewCreateModal .mm-edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#reviewCreateModal .mm-textarea--fixed {
+  width: 100%;
+  height: 360px;
+  resize: none;
+  border: 1px solid rgba(45, 45, 58, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.75;
+  background: rgba(255, 255, 255, 0.86);
+  color: rgba(45, 45, 58, 0.9);
+  box-sizing: border-box;
+}
+
+#reviewCreateModal .mm-textarea--fixed:focus {
+  outline: none;
+  border-color: rgba(45, 45, 58, 0.22);
+  box-shadow: 0 0 0 3px rgba(45, 45, 58, 0.1);
+}
+
+#reviewCreateModal .mm-textarea-meta {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.62);
+}
+
+#reviewCreateModal .mm-field-error {
+  color: #e03131;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  min-height: 18px;
+  text-align: center;
+}
+
+#reviewCreateModal .mm-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.9) 34%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}
+
+#reviewCreateModal .mm-save-btn {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+}
+
+/* src/css/mypage.css */
+
+/* completed 목록: status 칩을 더 작게 + 닉네임과 간격 확보 */
+.mypage-review-head .mypage-status-chip {
+  padding: 5px 8px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* status(위) -> 닉네임(아래) 간격 늘리기 */
+.mypage-review-head .mypage-item-title {
+  margin-top: 5px;
+}
+
+.mypage-review-edit-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  position: static;
+}
