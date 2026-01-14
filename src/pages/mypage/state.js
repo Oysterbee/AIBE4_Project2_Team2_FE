@@ -3,21 +3,22 @@ import { api } from "../../services/api.js";
 
 export const MYPAGE_TABS = [
   { key: "profile", label: "내 정보 수정" },
-  { key: "reviews", label: "내가 작성한 후기" },
-  { key: "qna", label: "내가 작성한 질문" },
   { key: "applied", label: "내가 신청한 인터뷰" },
   { key: "completed", label: "완료된 인터뷰" },
+  { key: "reviews", label: "내가 작성한 후기" },
+  { key: "qna", label: "내가 작성한 질문" },
 ];
 
 const STORAGE_KEY = "mypage.activeTab";
 const DEFAULT_TAB = "profile";
+const QNA_PAGE_SIZE = 2;
 
 /*
   응답 형태는 { success, data: [], meta } 를 기준으로 처리한다.
 */
 const ENDPOINTS = {
   reviews: "/members/me/reviews/written",
-  qna: "/mypage/qna",
+  qna: "/members/me/questions",
   applied: "/members/me/interviews/applied",
   completed: "/members/me/interviews/completed-without-review",
 };
@@ -70,7 +71,8 @@ export function createMyPageState({ rememberLastTab = false } = {}) {
       reviews: async ({ page, size }) =>
         fetchList(ENDPOINTS.reviews, { page, size }),
 
-      qna: async ({ page, size }) => fetchList(ENDPOINTS.qna, { page, size }),
+      qna: async ({ page, size }) =>
+        fetchList(ENDPOINTS.qna, { page, size: QNA_PAGE_SIZE }),
 
       applied: async ({ page, size }) =>
         fetchList(ENDPOINTS.applied, { page, size }),

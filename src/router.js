@@ -3,9 +3,6 @@ import { isLoggedIn, getSession, logout } from "./auth/auth.js";
 
 import { renderHome } from "./pages/home.js";
 import { renderMyPage } from "./pages/mypage.js";
-import { renderMyInterviewDetail } from "./pages/mypage-interview-detail.js";
-import { renderMyQnaDetail } from "./pages/mypage-qna-detail.js";
-import { renderMyReviewDetail } from "./pages/mypage-review-detail.js";
 
 import { renderLogin } from "./pages/login.js";
 import { renderSignup } from "./pages/signup.js";

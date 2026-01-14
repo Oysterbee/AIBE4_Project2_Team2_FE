@@ -14,8 +14,16 @@ import { renderCompletedInterviewItem } from "./renderers/completedInterview.js"
 import { openReviewCreateModal } from "./components/reviewCreateModal.js";
 import { fetchAppliedInterviewDetail } from "./api.js";
 
+import { renderMyQuestionItem } from "./renderers/qna.js";
+import { openQnaEditModal } from "./components/qnaEditModal.js";
+import { deleteMyQuestion } from "./api.js";
+
 import { renderPagination } from "./pagination.js";
-import { startOverlayLoading, endOverlayLoading } from "../../utils/overlay.js";
+import {
+  startOverlayLoading,
+  endOverlayLoading,
+  showOverlayCheck,
+} from "../../utils/overlay.js";
 
 export function initTabsSection(state) {
   const tabsEl = document.getElementById("mypageTabs");
@@ -24,6 +32,7 @@ export function initTabsSection(state) {
   if (!tabsEl || !listEl || !pagerEl) return;
 
   const itemsByReviewId = new Map();
+  const itemsByQuestionId = new Map();
 
   renderTabs();
   bindTabClick();
@@ -39,10 +48,15 @@ export function initTabsSection(state) {
     if (state.activeTab === "completed") await renderActiveTab();
   });
 
+  window.addEventListener("mm:question-updated", async () => {
+    if (state.activeTab === "qna") await renderActiveTab();
+  });
+
   async function renderActiveTab() {
     listEl.innerHTML = "";
     pagerEl.innerHTML = "";
     itemsByReviewId.clear();
+    itemsByQuestionId.clear();
 
     if (state.activeTab === "profile") {
       renderProfileTab(state);
@@ -79,6 +93,19 @@ export function initTabsSection(state) {
 
       if (state.activeTab === "completed") {
         listEl.innerHTML = items.map(renderCompletedInterviewItem).join("");
+        renderPagerAlways(res?.meta);
+        return;
+      }
+
+      if (state.activeTab === "qna") {
+        for (const it of items) {
+          const qid = String(it?.questionId ?? "").trim();
+          if (qid) itemsByQuestionId.set(qid, it);
+        }
+        listEl.innerHTML = items.map(renderMyQuestionItem).join("");
+
+        enableQnaMoreButtons(listEl);
+
         renderPagerAlways(res?.meta);
         return;
       }
@@ -184,6 +211,91 @@ export function initTabsSection(state) {
       await openAppliedDetailWithLoading(interviewId);
       return;
     }
+
+    if (state.activeTab === "qna") {
+      const toggleBtn = e.target.closest?.('[data-action="toggle-qna"]');
+      if (toggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const row = toggleBtn.closest?.(".mypage-qna-item");
+        if (!row) return;
+
+        const target = toggleBtn.getAttribute("data-target"); // question | answer
+        const open = toggleBtn.getAttribute("data-open") === "true";
+
+        const shortEl = row.querySelector(
+          target === "question"
+            ? '[data-part="q-short"]'
+            : '[data-part="a-short"]'
+        );
+        const fullEl = row.querySelector(
+          target === "question"
+            ? '[data-part="q-full"]'
+            : '[data-part="a-full"]'
+        );
+
+        if (!shortEl || !fullEl) return;
+
+        const nextOpen = !open;
+
+        if (nextOpen) {
+          shortEl.hidden = true;
+          fullEl.hidden = false;
+          toggleBtn.textContent = "접기";
+          toggleBtn.setAttribute("data-open", "true");
+          toggleBtn.setAttribute("aria-expanded", "true");
+        } else {
+          shortEl.hidden = false;
+          fullEl.hidden = true;
+          toggleBtn.textContent = "더보기";
+          toggleBtn.setAttribute("data-open", "false");
+          toggleBtn.setAttribute("aria-expanded", "false");
+        }
+
+        return;
+      }
+
+      const editBtn = e.target.closest?.('[data-action="edit-qna"]');
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (editBtn.hasAttribute("disabled")) return;
+
+        const questionId = String(
+          editBtn.getAttribute("data-question-id") || ""
+        ).trim();
+        if (!questionId) return;
+
+        const item = itemsByQuestionId.get(questionId);
+        if (!item) return;
+
+        openQnaEditModal({
+          questionId,
+          content: item?.questionContent ?? "",
+        });
+        return;
+      }
+
+      const delBtn = e.target.closest?.('[data-action="delete-qna"]');
+      if (delBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (delBtn.hasAttribute("disabled")) return;
+
+        const questionId = String(
+          delBtn.getAttribute("data-question-id") || ""
+        ).trim();
+        if (!questionId) return;
+
+        await confirmDeleteMyQuestion({ questionId });
+        return;
+      }
+
+      return;
+    }
   }
 
   async function onListKeydown(e) {
@@ -246,6 +358,31 @@ export function initTabsSection(state) {
       await openAppliedDetailWithLoading(interviewId);
       return;
     }
+
+    if (state.activeTab === "qna") {
+      const toggleBtn = e.target.closest?.('[data-action="toggle-qna"]');
+      if (toggleBtn) {
+        e.preventDefault();
+        toggleBtn.click();
+        return;
+      }
+
+      const editBtn = e.target.closest?.('[data-action="edit-qna"]');
+      if (editBtn) {
+        e.preventDefault();
+        if (editBtn.hasAttribute("disabled")) return;
+        editBtn.click();
+        return;
+      }
+
+      const delBtn = e.target.closest?.('[data-action="delete-qna"]');
+      if (delBtn) {
+        e.preventDefault();
+        if (delBtn.hasAttribute("disabled")) return;
+        delBtn.click();
+        return;
+      }
+    }
   }
 
   async function openReviewDetailWithLoading(reviewId) {
@@ -271,6 +408,25 @@ export function initTabsSection(state) {
       alert("상세 조회에 실패했다");
     } finally {
       endOverlayLoading();
+    }
+  }
+
+  async function confirmDeleteMyQuestion({ questionId }) {
+    const ok = confirm("정말 삭제할까?");
+    if (!ok) return;
+
+    try {
+      startOverlayLoading();
+      const res = await deleteMyQuestion(questionId);
+      if (!res?.success) throw new Error(res?.message || "delete failed");
+
+      if (state.activeTab === "qna") await state.renderActiveTab?.();
+      window.dispatchEvent(new CustomEvent("mm:qna-updated"));
+    } catch {
+      alert("삭제에 실패했다");
+    } finally {
+      endOverlayLoading();
+      showOverlayCheck({ durationMs: 900 });
     }
   }
 
@@ -327,5 +483,53 @@ export function initTabsSection(state) {
     if (candidate < 1) return 1;
     if (candidate > totalPages) return totalPages;
     return candidate;
+  }
+
+  function enableQnaMoreButtons(root) {
+    root.querySelectorAll(".mypage-qna-item").forEach((row) => {
+      applyOverflowToggle(
+        row,
+        "question",
+        '[data-part="q-short"]',
+        '[data-part="q-full"]'
+      );
+      applyOverflowToggle(
+        row,
+        "answer",
+        '[data-part="a-short"]',
+        '[data-part="a-full"]'
+      );
+    });
+  }
+
+  function applyOverflowToggle(row, target, shortSel, fullSel) {
+    const btn = row.querySelector(`.mypage-qna-more[data-target="${target}"]`);
+    const shortEl = row.querySelector(shortSel);
+    const fullEl = row.querySelector(fullSel);
+    if (!btn || !shortEl || !fullEl) return;
+
+    const shortText = String(shortEl.textContent ?? "").trim();
+    const fullText = String(fullEl.textContent ?? "").trim();
+    if (!shortText || !fullText) {
+      btn.hidden = true;
+      return;
+    }
+
+    const isOverflow = shortEl.scrollWidth > shortEl.clientWidth + 1;
+
+    if (isOverflow) {
+      btn.hidden = false;
+      shortEl.hidden = false;
+      fullEl.hidden = true;
+      btn.textContent = "더보기";
+      btn.setAttribute("data-open", "false");
+      btn.setAttribute("aria-expanded", "false");
+    } else {
+      btn.hidden = true;
+      shortEl.hidden = true;
+      fullEl.hidden = false;
+      btn.setAttribute("data-open", "false");
+      btn.setAttribute("aria-expanded", "false");
+    }
   }
 }

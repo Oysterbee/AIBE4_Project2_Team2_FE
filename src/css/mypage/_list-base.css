@@ -1,0 +1,114 @@
+.mypage-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* 또는 기존 고정 높이 유지 */
+  min-height: 0;
+}
+
+/* 목록 영역만 스크롤되게 */
+#mypageList {
+  flex: 1 1 auto;
+  min-height: 0;          /* flex 자식 스크롤 필수 */
+  overflow-y: auto;       /* 여기서 스크롤 */
+  overflow-x: hidden;
+  padding-bottom: 12px;   /* 스크롤 끝에서 버튼/내용 잘림 방지 */
+}
+
+/* 페이지네이션은 아래에 고정 */
+#mypagePagination {
+  flex: 0 0 auto;
+}
+
+.mypage-item {
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+}
+
+.mypage-item:first-child {
+  padding-top: 0;
+}
+
+.mypage-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.mypage-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mypage-item-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--dark-text);
+}
+
+.mypage-item-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.mypage-item-content {
+  margin-top: 10px;
+  font-size: 14px;
+  color: rgba(45, 45, 58, 0.76);
+  line-height: 1.75;
+}
+
+.mypage-item-actions {
+  margin-top: 12px;
+}
+
+.mypage-mini-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.mypage-mini-btn:hover {
+  border-color: rgba(212, 244, 167, 0.55);
+  background: rgba(212, 244, 167, 0.16);
+  transform: translateY(-0.5px);
+}
+
+.mypage-radio-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mypage-radio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mypage-hidden {
+  display: none;
+}
+
+.mypage-avatar-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mypage-image-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}

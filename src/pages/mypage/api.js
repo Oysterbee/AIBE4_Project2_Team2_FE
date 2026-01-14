@@ -67,3 +67,19 @@ export async function createInterviewReview(interviewId, payload = {}) {
   const id = encodeURIComponent(String(interviewId));
   return api.post(`/interviews/${id}/reviews`, payload);
 }
+
+// 내가 작성한 질문 목록(페이지)
+export async function fetchMyQuestionsPage({ page, size }) {
+  return api.get(`/members/me/questions${buildPageQuery({ page, size })}`);
+}
+
+// 질문 수정(답변 달리기 전)
+export async function updateQuestion(questionId, payload) {
+  const id = encodeURIComponent(String(questionId));
+  return api.patch(`/questions/${id}`, payload);
+}
+
+// 질문 삭제(답변 달리기 전)
+export function deleteMyQuestion(questionId) {
+  return api.delete(`/questions/${encodeURIComponent(questionId)}`);
+}

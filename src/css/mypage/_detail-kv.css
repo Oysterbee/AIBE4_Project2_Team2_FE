@@ -1,0 +1,47 @@
+.mm-kv2 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mm-kv2__row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 10px 10px 12px;
+  border-left: 3px solid rgba(45, 45, 58, 0.1);
+  border-radius: 14px;
+  background: rgba(45, 45, 58, 0.02);
+}
+
+.mm-kv2__k {
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.78);
+  padding-top: 10px;
+  white-space: nowrap;
+}
+
+.mm-kv2__v {
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(45, 45, 58, 0.86);
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 45, 58, 0.1);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.mm-pre,
+.mm-kv2__v.mm-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.75;
+}
+
+.mm-empty {
+  padding: 14px 0;
+  color: rgba(45, 45, 58, 0.62);
+  font-weight: 800;
+}
