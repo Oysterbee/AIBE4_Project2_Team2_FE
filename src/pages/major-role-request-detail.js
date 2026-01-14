@@ -1,48 +1,43 @@
 import { navigate } from "../router.js";
 import { api } from "../services/api.js";
+import { showOverlayCheck, withOverlayLoading } from "../utils/overlay.js";
 
 export async function renderMajorRequestDetail(root, params) {
   const requestId = params.id;
 
   const wrap = document.createElement("div");
-  wrap.className = "request-detail-wrap";
+  wrap.className = "request-detail-wrap only-content"; // 'only-content' 클래스 추가
 
   wrap.innerHTML = `
-    <h2 class="page-title">신청 상세 내역</h2>
+    <div class="detail-page-header">
+      <h2 class="page-title">신청 상세 내역</h2>
+      <button class="btn-close-window" onclick="window.close()">창 닫기</button>
+    </div>
     <div class="detail-container" id="detailContainer">
       <div class="loading">불러오는 중...</div>
-    </div>
-    <div class="btn-row">
-        <button class="btn-back" id="backBtn">목록으로</button>
     </div>
   `;
 
   root.appendChild(wrap);
-
   const detailContainer = wrap.querySelector("#detailContainer");
-  const backBtn = wrap.querySelector("#backBtn");
 
-  backBtn.addEventListener("click", () => navigate("/major-role-request")); // 목록 페이지로 이동
+  await withOverlayLoading(
+    async () => {
+      try {
+        const response = await api.get(`/major-requests/${requestId}`);
 
-  try {
-    const token = localStorage.getItem("mm_user");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
-
-    const response = await api.get(`/major-requests/${requestId}`);
-
-    if (!response?.success && response.data) {
-      detailContainer.innerHTML = `<div class="error">조회 실패: ${errorText}</div>`;
-      return { ok: false, message: result?.message || "불러오기 실패" };
-    }
-    renderDetail(detailContainer, response.data);
-  } catch (error) {
-    console.error("Error:", error);
-    detailContainer.innerHTML = `<div class="error">서버 통신 오류</div>`;
-  }
+        if (response?.success) {
+          renderDetail(detailContainer, response.data);
+        } else {
+          detailContainer.innerHTML = `<div class="error">데이터 로드 실패: ${response?.message}</div>`;
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        detailContainer.innerHTML = `<div class="error">서버 통신 오류가 발생했습니다.</div>`;
+      }
+    },
+    { text: "신청 내역 상세 정보를 가져오고 있습니다..." }
+  );
 }
 
 function renderDetail(container, detail) {
@@ -71,23 +66,26 @@ function renderDetail(container, detail) {
     </div>
 
     <!-- 2. 신청 내용 카드 -->
-    <div class="detail-card">
-      <h3 class="card-title">신청 내용</h3>
-      <div class="detail-content">
-        ${detail.content}
-      </div>
-      
+<div class="detail-card">
+  <h3 class="card-title">신청 내용</h3>
+  
+  <div class="detail-content text-section">
+    ${detail.content}
+  </div>
+
+  <hr class="section-divider" />
+
+  <div class="document-section">
+    <p class="label">증빙 서류</p>
+    <div class="document-box">
       ${
         detail.documentUrl
-          ? `
-        <div class="document-area">
-          <p class="label">증빙 서류</p>
-          <img src="${detail.documentUrl}" alt="증빙 서류" class="document-img" />
-        </div>
-      `
-          : ""
+          ? `<img src="${detail.documentUrl}" alt="증빙 서류" class="document-img" />`
+          : `<p class="pd-muted">검토가 완료되었거나 증빙 서류가 존재하지 않습니다.</p>`
       }
     </div>
+  </div>
+</div>
 
     <!-- 3. 히스토리 (타임라인) -->
 <div class="detail-card">
