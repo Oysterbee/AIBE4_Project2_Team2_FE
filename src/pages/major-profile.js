@@ -407,6 +407,9 @@ function renderEditMode(container, profile, user) {
 
 // --- [인증 현황 탭 렌더링] ---
 function renderRequestDetail(container, request) {
+  const session = getSession();
+  const user = session?.user;
+
   if (!request || request.length === 0) {
     container.innerHTML = `
       <div class="mj-card mj-empty-card">
@@ -419,6 +422,11 @@ function renderRequestDetail(container, request) {
   const data = request[0];
   const statusInfo = getStatusDisplay(data.applicationStatus);
   const isRejected = data.applicationStatus === "REJECTED";
+
+  if (user && user.applicationStatus !== data.applicationStatus) {
+    sessionStorage.setItem("mm_user", JSON.stringify(data.applicationStatus));
+    // 세션 객체의 값 변경
+  }
 
   container.innerHTML = `
     <div class="mj-card mj-card--clickable" id="requestCard">
@@ -830,7 +838,7 @@ function renderMajorQnaList(container, pageData, user, isMore = false) {
   const meta = pageData?.meta || {};
   const totalCount = meta.totalElements || 0;
   const isLast = meta.last;
-
+  console.log(items);
   if (!isMore) {
     if (!items || items.length === 0) {
       container.innerHTML = `
@@ -856,7 +864,7 @@ function renderMajorQnaList(container, pageData, user, isMore = false) {
   items.forEach((item) => {
     // 백엔드 데이터 구조에 맞춰 변수 추출 수정
     // item.question, item.answer, item.student 객체에서 가져옴
-    const qId = item.questionId;
+    const qId = item.question.questionId;
     const studentNick = item.student?.nickname || "익명";
     const qContent = item.question?.content || "";
     const aContent = item.answer?.content || "";
