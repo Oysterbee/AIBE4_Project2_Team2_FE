@@ -1,0 +1,110 @@
+.mypage-review-item {
+  position: relative;
+}
+
+.mypage-review-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.mypage-review-left {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.mypage-review-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--pastel-green-soft) 0%,
+    var(--pastel-mint) 100%
+  );
+  border: 1px solid rgba(212, 244, 167, 0.45);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex: 0 0 auto;
+}
+
+.mypage-review-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mypage-review-sub {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.mypage-review-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.mypage-date {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mypage-review-meta .mypage-date {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.mypage-date-label {
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.68);
+  margin-right: 6px;
+}
+
+.mypage-date-value {
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.86);
+}
+
+.mypage-review-bottom {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.mypage-review-snippet {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: rgba(45, 45, 58, 0.76);
+  max-width: 850px;
+}
+
+.mypage-review-edit-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  position: static;
+}
+
+/* 완료 탭의 후기 작성하기 버튼도 동일하게 우측 끝 고정 */
+.mypage-review-write-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  position: static;
+}

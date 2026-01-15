@@ -1,0 +1,51 @@
+.mm-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mm-badge[data-tone="dark"] {
+  background: var(--dark-text);
+  color: #fff;
+}
+
+.mm-badge[data-tone="soft"] {
+  background: rgba(212, 244, 167, 0.28);
+  color: rgba(45, 45, 58, 0.82);
+  border: 1px solid rgba(45, 45, 58, 0.1);
+}
+
+.mm-badge[data-tone="accepted"] {
+  background: rgba(59, 130, 246, 0.16);
+  color: rgba(37, 99, 235, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
+.mm-badge[data-tone="rejected"] {
+  background: rgba(239, 68, 68, 0.14);
+  color: rgba(220, 38, 38, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.mm-badge[data-tone="pending"] {
+  background: color-mix(in srgb, var(--pastel-yellow) 55%, white);
+  color: rgba(45, 45, 58, 0.86);
+  border: 1px solid
+    color-mix(in srgb, var(--pastel-yellow) 65%, rgba(45, 45, 58, 0.18));
+}
+
+/* 목록 내부 상태칩 공통 */
+.mypage-status-chip {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* completed: 칩을 더 작게 + 닉네임과 간격 확보 */
+.mypage-review-head .mypage-status-chip {
+  padding: 5px 8px;
+  font-size: 10px;
+  line-height: 1;
+}

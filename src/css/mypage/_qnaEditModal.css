@@ -1,0 +1,98 @@
+/* src/css/mypage/_qnaEditModal.css */
+/* 후기 작성/수정 모달 디자인을 그대로 가져오고, 별점 영역만 제외한 버전 */
+
+#qnaEditModal .mm-modal__panel {
+  width: min(640px, calc(100% - 24px));
+  max-height: 86vh;
+}
+
+#qnaEditModal .mm-modal__body {
+  padding: 16px;
+  padding-right: 14px;
+}
+
+/* 기존 리뷰 모달 구조(class)는 재사용한다 */
+#qnaEditModal .mm-review-edit-stack {
+  gap: 12px;
+}
+
+#qnaEditModal .mm-review-edit--vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* qna에는 별점이 없으니 top은 간단히만(없어도 되지만 간격 통일용) */
+#qnaEditModal .mm-edit-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#qnaEditModal .mm-edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#qnaEditModal .mm-textarea--fixed {
+  width: 100%;
+  height: 360px;
+  resize: none;
+  border: 1px solid rgba(45, 45, 58, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.75;
+  background: rgba(255, 255, 255, 0.86);
+  color: rgba(45, 45, 58, 0.9);
+  box-sizing: border-box;
+}
+
+#qnaEditModal .mm-textarea--fixed:focus {
+  outline: none;
+  border-color: rgba(45, 45, 58, 0.22);
+  box-shadow: 0 0 0 3px rgba(45, 45, 58, 0.1);
+}
+
+#qnaEditModal .mm-textarea-meta {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.62);
+}
+
+#qnaEditModal .mm-field-error {
+  color: #e03131;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  min-height: 18px;
+  text-align: center;
+}
+
+#qnaEditModal .mm-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.9) 34%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}
+
+/* 저장 버튼 규칙(네가 적어둔 값 반영) */
+#qnaEditModal .mm-save-btn {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+}

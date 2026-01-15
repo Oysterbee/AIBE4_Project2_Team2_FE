@@ -1,0 +1,74 @@
+.mm-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mm-review__content {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 45, 58, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mm-review__stars {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mm-review__stars .star {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mm-card__head--review {
+  align-items: center;
+}
+
+.mm-card__head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mm-card__title--inline {
+  margin: 0;
+}
+
+.mm-review__stars--inline {
+  font-size: 18px;
+  line-height: 1;
+  margin: 0;
+}
+
+:root {
+  --mm-label-text: rgba(45, 45, 58, 0.66);
+  --mm-label-bg: rgba(45, 45, 58, 0.06);
+  --mm-label-border: rgba(45, 45, 58, 0.1);
+}
+
+.mm-date-label {
+  color: var(--mm-label-text);
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--mm-label-bg);
+  border: 1px solid var(--mm-label-border);
+  line-height: 1.2;
+}
+
+.mm-review__dates {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.7);
+  white-space: nowrap;
+}
+
+.mm-review__dates--top {
+  display: block;
+}
+
+.mm-review__dates--below {
+  display: none;
+}

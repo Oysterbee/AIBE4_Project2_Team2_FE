@@ -523,7 +523,6 @@ function renderReceivedInterviews(container, pageData, user, isMore = false) {
     const card = document.createElement("div");
     card.className = "mj-card mj-card--interview";
 
-    // 상태 배지 클래스 매핑
     const statusMap = {
       PENDING: { label: "신규 요청", class: "mj-badge--pending" },
       ACCEPTED: { label: "수락함", class: "mj-badge--accepted" },
@@ -532,17 +531,16 @@ function renderReceivedInterviews(container, pageData, user, isMore = false) {
     };
     const currentStatus = statusMap[status] || { label: status, class: "" };
 
-    const preferredDate = new Date(interview.preferredDatetime).toLocaleString(
-      "ko-KR",
-      {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }
-    );
+    const preferredDate = interview?.preferredDatetime
+      ? new Date(interview.preferredDatetime).toLocaleString("ko-KR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : "-";
 
     card.innerHTML = `
       <div class="mj-interview-item">
@@ -550,70 +548,62 @@ function renderReceivedInterviews(container, pageData, user, isMore = false) {
           <span class="mj-info__badge ${currentStatus.class}">${
       currentStatus.label
     }</span>
-          <span class="mj-item-date">신청일: ${new Date(
-            createdAt
-          ).toLocaleDateString()}</span>
+          <span class="mj-item-date">신청일: ${
+            createdAt ? new Date(createdAt).toLocaleDateString() : "-"
+          }</span>
         </div>
-        
+
         <div class="mj-item-mid">
           <div class="mj-student-info">
-            <strong>${student.nickname}</strong> <span class="mj-sub-text">${
-      student.university
-    }</span>
+            <strong>${student?.nickname ?? "-"}</strong>
+            <span class="mj-sub-text">${student?.university ?? "-"}</span>
           </div>
-          <p class="mj-item-title">${interview.title}</p>
+          <p class="mj-item-title">${interview?.title ?? "-"}</p>
           <div class="mj-time-box">
-             <p class="mj-time-label">📅 인터뷰 희망 시간</p>
-             <p class="mj-time-value">${preferredDate}</p>
+            <p class="mj-time-label">📅 인터뷰 희망 시간</p>
+            <p class="mj-time-value">${preferredDate}</p>
           </div>
         </div>
 
         ${
           status === "PENDING"
             ? `
-          <div class="mj-response-area">
-            <textarea class="mj-response-input" placeholder="학생에게 메시지를 남겨주세요."></textarea>
-            <div class="mj-item-actions">
-              <button class="mj-btn-mm mj-btn-mm--accept">인터뷰 수락</button>
-              <button class="mj-btn-mm mj-btn-mm--reject">거절</button>
-            </div>
-          </div>
-        `
+              <div class="mj-response-area">
+                <textarea class="mj-response-input" placeholder="학생에게 메시지를 남겨주세요."></textarea>
+                <div class="mj-item-actions">
+                  <button class="mj-btn-mm mj-btn-mm--accept">인터뷰 수락</button>
+                  <button class="mj-btn-mm mj-btn-mm--reject">거절</button>
+                </div>
+              </div>
+            `
             : ""
         }
 
         ${
           status === "ACCEPTED"
             ? `
-          <div class="mj-item-actions" style="margin-top: 12px;">
-            <button class="mj-btn-mm mj-btn-mm--complete" style="width: 100%; background: var(--pastel-green-strong); color: var(--dark-text);">
-              인터뷰 진행 완료
-            </button>
-          </div>
-        `
+              <div class="mj-item-actions" style="margin-top: 12px;">
+                <button class="mj-btn-mm mj-btn-mm--complete" style="width: 100%; background: var(--pastel-green-strong); color: var(--dark-text);">
+                  인터뷰 진행 완료
+                </button>
+              </div>
+            `
             : ""
         }
       </div>
     `;
 
-    // 이벤트 바인딩
     if (status === "PENDING") {
       const msgInput = card.querySelector(".mj-response-input");
+
       card.querySelector(".mj-btn-mm--accept").onclick = () =>
-        handleInterviewStatus(
-          interview.interviewId,
-          "ACCEPTED",
-          msgInput.value
-        );
+        handleInterviewStatus(interviewId, "ACCEPTED", msgInput?.value ?? "");
+
       card.querySelector(".mj-btn-mm--reject").onclick = () =>
-        handleInterviewStatus(
-          interview.interviewId,
-          "REJECTED",
-          msgInput.value
-        );
+        handleInterviewStatus(interviewId, "REJECTED", msgInput?.value ?? "");
     } else if (status === "ACCEPTED") {
       card.querySelector(".mj-btn-mm--complete").onclick = () =>
-        handleInterviewStatus(interview.interviewId, "COMPLETED");
+        handleInterviewStatus(interviewId, "COMPLETED");
     }
 
     listArea.appendChild(card);
@@ -631,14 +621,21 @@ function renderReceivedInterviews(container, pageData, user, isMore = false) {
 
 // 인터뷰 상태 변경 처리 함수 (메시지 인자 추가)
 async function handleInterviewStatus(interviewId, newStatus, message = "") {
-  const statusMap = {
-    ACCEPTED: "accept",
-    REJECTED: "reject",
-    COMPLETED: "complete",
-  };
-  const actionText = { ACCEPTED: "수락", REJECTED: "거절", COMPLETED: "완료" }[
-    newStatus
-  ];
+  if (!interviewId) {
+    alert("인터뷰 ID가 없어 처리할 수 없습니다.");
+    return;
+  }
+
+  const actionText =
+    { ACCEPTED: "수락", REJECTED: "거절", COMPLETED: "완료" }[newStatus] ||
+    "처리";
+
+  if (newStatus === "ACCEPTED" || newStatus === "REJECTED") {
+    if (!String(message || "").trim()) {
+      alert("메시지를 입력해 주세요.");
+      return;
+    }
+  }
 
   const confirmMsg =
     newStatus === "COMPLETED"
@@ -662,7 +659,7 @@ async function handleInterviewStatus(interviewId, newStatus, message = "") {
             text: `${actionText} 처리가 완료되었습니다.`,
             durationMs: 800,
           });
-          // 탭 갱신 로직 (setTimeout으로 체크 오버레이 보여줄 시간 확보)
+
           setTimeout(() => {
             const interviewTabBtn = document.querySelector(
               '.mj-tab[data-tab="interviews"]'
@@ -709,13 +706,22 @@ function renderReceivedReviews(container, pageData, user, isMore = false) {
     const card = document.createElement("div");
     card.className = "mj-card mj-card--review";
 
-    // 별점 생성을 위한 로직 (5점 만점)
-    const stars = "⭐".repeat(review.rating);
-    const dateStr = new Date(createdAt).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    const rating = Number(review?.rating) || 0;
+    const stars = "⭐".repeat(Math.max(0, Math.min(5, rating)));
+
+    const dateStr = createdAt
+      ? new Date(createdAt).toLocaleDateString("ko-KR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+      : "-";
+
+    const profileImageUrl = String(peer?.profileImageUrl || "").trim();
+    const nickname = String(peer?.nickname || "-");
+    const university = String(peer?.university || "-");
+    const major = String(peer?.major || "-");
+    const content = String(review?.content || "");
 
     card.innerHTML = `
       <div class="mj-review-item">
@@ -726,20 +732,21 @@ function renderReceivedReviews(container, pageData, user, isMore = false) {
             }');">
             </div>
             <div class="mj-student-meta">
-              <span class="mj-student-nick">${student.nickname}</span>
-              <span class="mj-student-univ">${student.university} · ${
-      student.major
-    }</span>
+              <span class="mj-student-nick">${escapeHtml(nickname)}</span>
+              <span class="mj-student-univ">${escapeHtml(
+                university
+              )} · ${escapeHtml(major)}</span>
             </div>
           </div>
-          <span class="mj-review-date">${dateStr}</span>
+          <span class="mj-review-date">${escapeHtml(dateStr)}</span>
         </div>
 
         <div class="mj-review-body">
-          <div class="mj-rating-box">${stars} <span class="mj-rating-num">${
-      review.rating
-    }.0</span></div>
-          <p class="mj-review-text">"${review.content}"</p>
+          <div class="mj-rating-box">${stars} <span class="mj-rating-num">${Math.max(
+      0,
+      Math.min(5, rating)
+    )}.0</span></div>
+          <p class="mj-review-text">"${escapeHtml(content)}"</p>
         </div>
       </div>
     `;

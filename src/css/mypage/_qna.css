@@ -1,0 +1,228 @@
+/* src/css/mypage/_qna.css */
+
+.mypage-qna-item {
+  position: relative;
+}
+
+/* QnA 전용 상태칩 */
+.mypage-qna-status.mm-badge {
+  padding: 5px 8px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* 블록(질문/답글) */
+.mypage-qna-block {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(45, 45, 58, 0.02);
+}
+
+
+/* 답글 헤더 우측 날짜 */
+.mypage-qna-head-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mypage-qna-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 날짜 한 줄(질문일/답변일/수정일) */
+.mypage-qna-dates-line {
+  margin: 6px 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 날짜 라벨 칩 */
+.mypage-qna-date-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+
+  border: 1px solid var(--line);
+  background: var(--surface);
+
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(45, 45, 58, 0.86);
+  white-space: nowrap;
+}
+
+/* 날짜 값 */
+.mypage-qna-date-val {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.78);
+  white-space: nowrap;
+}
+
+/* 구분점 */
+.mypage-qna-dot {
+  flex: 0 0 auto;
+  opacity: 0.6;
+  margin: 0 2px;
+}
+
+/* 답글 헤더 */
+.mypage-qna-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+/* 내용 + 더보기(한 줄 ellipsis + 버튼 우측) */
+.mypage-qna-text {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+/* 내용 글자 크기 확대 + 줄 간격 확대 */
+.mypage-qna-short,
+.mypage-qna-full {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.65;
+  color: rgba(45, 45, 58, 0.88);
+}
+
+.mypage-qna-short {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mypage-qna-full {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 더보기 버튼 */
+.mypage-qna-item .mypage-qna-more {
+  margin-left: auto;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 56px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: rgba(45, 45, 58, 0.86);
+
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mypage-qna-item .mypage-qna-more:hover {
+  border-color: rgba(212, 244, 167, 0.55);
+  background: rgba(212, 244, 167, 0.16);
+  transform: translateY(-0.5px);
+}
+
+/* 수정/삭제 버튼 영역 */
+.mypage-qna-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* hidden 속성 전역 충돌 방어 */
+.mypage-qna-item [hidden] {
+  display: none !important;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .mypage-qna-actions {
+    justify-content: flex-start;
+  }
+
+  .mypage-qna-dates-line {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .mypage-qna-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mypage-qna-head-dates {
+    width: 100%;
+  }
+}
+
+.mypage-qna-block--answer .mypage-qna-text {
+  margin-top: 10px;
+}
+
+/* src/css/mypage/_qna.css */
+
+/* 본문(질문/답글) 글씨를 한 톤 연하게 */
+.mypage-qna-short,
+.mypage-qna-full {
+  color: rgba(45, 45, 58, 0.74);
+}
+
+/* 제목(질문/답글)도 살짝 연하게 */
+.mypage-qna-k {
+  color: rgba(45, 45, 58, 0.68);
+}
+
+/* 날짜 라인(칩/값)도 살짝 연하게 */
+.mypage-qna-date-chip {
+  color: rgba(45, 45, 58, 0.72);
+}
+
+.mypage-qna-date-val {
+  color: rgba(45, 45, 58, 0.66);
+}
+
+/* 더보기 버튼 글씨도 살짝 연하게 */
+.mypage-qna-item .mypage-qna-more {
+  color: rgba(45, 45, 58, 0.72);
+}

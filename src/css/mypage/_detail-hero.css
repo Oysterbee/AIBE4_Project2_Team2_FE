@@ -1,0 +1,98 @@
+.mm-hero2 {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "avatar main badge"
+    "avatar main dates";
+  gap: 10px 12px;
+  align-items: center;
+}
+
+.mm-hero2__avatar {
+  grid-area: avatar;
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    var(--pastel-green-soft) 0%,
+    var(--pastel-mint) 100%
+  );
+  border: 1px solid rgba(212, 244, 167, 0.45);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  align-self: center;
+}
+
+.mm-hero2__main {
+  grid-area: main;
+  min-width: 0;
+  align-self: center;
+}
+
+.mm-hero2__line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.mm-hero2__name {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--dark-text);
+  white-space: nowrap;
+}
+
+.mm-hero2__paren {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(45, 45, 58, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mm-hero2__badge {
+  grid-area: badge;
+  justify-self: end;
+  align-self: center;
+}
+
+.mm-hero2__dates--inline {
+  grid-area: dates;
+  justify-self: end;
+  align-self: center;
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mm-hero2__message {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 45, 58, 0.1);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.mm-hero2__message-k {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(45, 45, 58, 0.66);
+  margin-bottom: 6px;
+}
+
+.mm-hero2__message-v {
+  font-size: 14px;
+  font-weight: 800;
+  color: rgba(45, 45, 58, 0.86);
+}

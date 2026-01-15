@@ -519,6 +519,24 @@ button {
   display: block;
 }
 
+/* src/css/common.css */
+
+/* 기존 brand 정렬은 유지하고, 이미지가 높이를 넘지 않게 */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  height: 34px;      /* 필요하면 24~34px 사이로 조절 */
+  width: auto;
+  object-fit: contain;
+}
+
+
 @keyframes mmOverlayFadeIn {
   from {
     opacity: 0;

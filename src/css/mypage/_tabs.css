@@ -1,0 +1,52 @@
+.mypage-activity {
+  padding: 0;
+}
+
+.mypage-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.mypage-tab {
+  height: 46px;
+  border: 0;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 14px;
+  color: rgba(45, 45, 58, 0.72);
+  transition: all 0.2s ease;
+}
+
+.mypage-tab:hover {
+  background: rgba(212, 244, 167, 0.12);
+  color: var(--dark-text);
+}
+
+.mypage-tab.active {
+  background: var(--dark-text);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.mypage-activity-body {
+  padding: 22px 22px 18px;
+  height: 750px;
+  height: calc(120vh - 240px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#mypageList,
+.mypage-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#mypagePagination,
+.mypage-activity-body .pagination {
+  flex: 0 0 auto;
+}

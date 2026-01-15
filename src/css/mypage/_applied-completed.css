@@ -1,0 +1,53 @@
+/* 신청 인터뷰 목록: 아바타 기준 텍스트 세로 중앙 정렬 */
+.mypage-applied-item .mypage-review-left {
+  align-items: center;
+}
+
+.mypage-applied-item .mypage-review-head {
+  justify-content: center;
+}
+
+.mypage-applied-item .mypage-review-meta {
+  justify-content: center;
+}
+
+/* applied 목록: 하단(제목 + 날짜) 정렬 보정 */
+.mypage-applied-item .mypage-review-bottom.mypage-applied-bottom {
+  align-items: flex-start; /* 가운데 정렬 제거 */
+}
+
+.mypage-applied-item .mypage-applied-dates {
+  margin-left: auto; /* 오른쪽 끝 고정 */
+}
+
+/* 제목이 날짜 때문에 잘리는 느낌이면(선택) */
+.mypage-applied-item .mypage-applied-snippet {
+  max-width: none;
+}
+
+
+/* status(위) -> 닉네임(아래) 간격을 늘리고 싶으면 이 값만 조절 */
+.mypage-review-head .mypage-item-title {
+  margin-top: 6px;
+}
+
+/* 스니펫 + 버튼이 한 줄에서 끝까지 유지되도록 */
+.mypage-review-bottom {
+  flex-wrap: nowrap;
+}
+
+/* 버튼은 항상 우측 끝 */
+.mypage-review-write-btn,
+.mypage-review-edit-btn {
+  margin-left: auto;
+}
+
+/* 신청한 인터뷰(applied) 탭: 우측 메타(칩/날짜) 세로 가운데 정렬 제거 */
+.mypage-applied-item .mypage-review-meta {
+  justify-content: flex-start; /* center -> flex-start */
+}
+
+/* 혹시 다른 규칙에 밀리면 이것도 같이 고정 */
+.mypage-applied-item .mypage-review-top {
+  align-items: flex-start;
+}

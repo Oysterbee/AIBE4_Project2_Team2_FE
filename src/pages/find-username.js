@@ -6,47 +6,66 @@ export function renderFindUsername(root) {
   wrap.className = "auth-wrap";
 
   wrap.innerHTML = `
-    <div class="auth-card card">
-      <div class="auth-brand">
-        <div class="brand-mark">MM</div>
-        <div class="auth-title">아이디 찾기</div>
+    <div class="auth-split">
+      <!-- 좌측: 로고 영역 -->
+      <div class="auth-hero">
+        <div class="auth-hero-content">
+          <img src="/img/logo.png" alt="MajorMate" class="auth-hero-logo" />
+          <p class="auth-hero-tagline">전공자와 함께하는<br/>진로 탐색의 첫걸음</p>
+        </div>
+        <div class="auth-hero-decoration"></div>
       </div>
 
-      <p class="auth-desc">가입 시 등록한 이메일로 인증하면 아이디를 확인할 수 있습니다</p>
+      <!-- 우측: 아이디 찾기 폼 -->
+      <div class="auth-form-side">
+        <div class="auth-card card">
+          <div class="auth-header">
+            <p class="auth-desc">가입 시 등록한 이메일로 인증하면<br/>아이디를 확인할 수 있습니다</p>
+          </div>
 
-      <form class="auth-form" id="findUsernameForm">
-        <div class="auth-row">
-          <label class="auth-label">이메일</label>
-          <div class="auth-row-inline">
-            <div class="auth-input-wrapper">
-              <input class="auth-input" id="emailInput" type="email" required />
+          <form class="auth-form" id="findUsernameForm">
+            <div class="auth-row">
+              <label class="auth-label">이메일</label>
+              <div class="auth-row-inline">
+                <div class="auth-input-wrapper">
+                  <input class="auth-input" id="emailInput" type="email" placeholder="이메일을 입력하세요" required />
+                </div>
+                <button type="button" class="auth-btn-secondary" id="sendVerificationBtn">인증 코드 발송</button>
+              </div>
+              <div id="emailStatus" class="auth-verification-status"></div>
             </div>
-            <button type="button" class="auth-btn-secondary" id="sendVerificationBtn">인증 코드 발송</button>
-          </div>
-          <div id="emailStatus" class="auth-verification-status"></div>
-        </div>
 
-        <div class="auth-row" id="verificationCodeRow" style="display: none;">
-          <label class="auth-label">인증 코드</label>
-          <div class="auth-row-inline">
-            <div class="auth-input-wrapper">
-              <input class="auth-input" id="verificationCodeInput" type="text" maxlength="6" placeholder="6자리 코드 입력" />
+            <div class="auth-row" id="verificationCodeRow" style="display: none;">
+              <label class="auth-label">인증 코드</label>
+              <div class="auth-row-inline">
+                <div class="auth-input-wrapper">
+                  <input class="auth-input" id="verificationCodeInput" type="text" maxlength="6" placeholder="6자리 코드 입력" />
+                </div>
+                <button type="button" class="auth-btn-secondary" id="verifyCodeBtn">확인</button>
+              </div>
+              <div id="verificationStatus" class="auth-verification-status"></div>
             </div>
-            <button type="button" class="auth-btn-secondary" id="verifyCodeBtn">확인</button>
-          </div>
-          <div id="verificationStatus" class="auth-verification-status"></div>
-        </div>
 
-        <div id="usernameResult" class="auth-row" style="display: none;">
-          <div style="padding: 16px; background: rgba(212, 244, 167, 0.2); border-radius: 10px; border: 1px solid var(--pastel-green);">
-            <p style="margin: 0 0 8px; font-size: 12px; color: var(--muted);">회원님의 아이디</p>
-            <p id="usernameText" style="margin: 0; font-size: 16px; font-weight: 800; color: var(--dark-text);"></p>
-          </div>
-        </div>
+            <div id="usernameResult" class="auth-row" style="display: none;">
+              <div class="auth-result-box">
+                <p class="auth-result-label">회원님의 아이디</p>
+                <p id="usernameText" class="auth-result-value"></p>
+              </div>
+            </div>
 
-        <button class="auth-primary" type="button" id="toLogin">로그인으로</button>
-        <button class="auth-ghost" type="button" id="toFindPassword">비밀번호 찾기</button>
-      </form>
+            <div class="auth-links-group">
+              <div class="auth-signup-prompt">
+                <span>비밀번호가 기억나지 않으세요?</span>
+                <button class="auth-link-btn" type="button" id="toFindPassword">비밀번호 찾기</button>
+              </div>
+              <div class="auth-signup-prompt">
+                <span>로그인 화면으로</span>
+                <button class="auth-link-btn" type="button" id="toLogin">돌아가기</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   `;
 
@@ -159,10 +178,8 @@ export function renderFindUsername(root) {
           const providerName = providerNames[provider] || provider;
 
           usernameText.innerHTML = `
-            <div style="text-align: center;">
-              <p style="margin: 0 0 8px; font-size: 14px; color: var(--text);">소셜 로그인으로 가입된 계정입니다</p>
-              <p style="margin: 0; font-size: 16px; font-weight: 800; color: var(--pastel-green-strong);">${providerName} 로그인을 사용해주세요</p>
-            </div>
+            <span class="auth-result-social">소셜 로그인으로 가입된 계정입니다</span>
+            <span class="auth-result-provider">${providerName} 로그인을 사용해주세요</span>
           `;
         } else {
           // 일반 로그인 사용자
