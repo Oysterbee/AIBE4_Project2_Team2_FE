@@ -438,10 +438,11 @@ export async function renderProfileDetail(root, { id }) {
   function renderQnaItem(item) {
     const session = getSession();
     const isOwner =
-      session?.user && String(session.user.id) === String(profile.memberId);
+      session?.user &&
+      String(session.user.memberId) === String(profile.memberId);
 
     // 백엔드 데이터 구조에 맞게 변수 추출
-    const qId = item.questionId;
+    const qId = item.question.questionId;
     const studentNick = item.student?.nickname || "익명";
     const studentUniv = item.student?.university || "";
     const studentImg = item.student?.profileImageUrl || "";
