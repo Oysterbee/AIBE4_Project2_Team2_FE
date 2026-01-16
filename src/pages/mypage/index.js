@@ -7,7 +7,7 @@
 */
 
 import { template } from "./template.js";
-import { createMyPageState } from "./state.js";
+import { createMyPageState, MYPAGE_TABS } from "./state.js";
 import { fetchMe } from "./api.js";
 import { initTabsSection } from "./tabs.js";
 
@@ -21,6 +21,17 @@ export async function renderMyPage(view) {
   // const state = createMyPageState({ rememberLastTab: true });
   const state = createMyPageState();
 
+  const hash = window.location.hash; // 예: "#/mypage?tab=qna"
+  const queryPart = hash.includes("?") ? hash.split("?")[1] : "";
+  const params = new URLSearchParams(queryPart);
+  const requestedTab = params.get("tab"); // "qna"
+
+  const validKeys = MYPAGE_TABS.map(t => t.key); 
+
+  if (requestedTab && validKeys.includes(requestedTab)) {
+      // 상태 객체의 탭 변경 메서드 호출 (localStorage 저장 및 페이징 초기화까지 처리됨)
+      state.setActiveTab(requestedTab);
+  }
   // 3) 내 정보 로딩(필수)
   try {
     state.me = await fetchMe();
