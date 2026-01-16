@@ -1,29 +1,49 @@
 // src/pages/mypage/renderers/qna.js
+/*
+  QnA 아이템 렌더링
+  - QnaResponse 구조(item.question, item.answer) 우선 대응
+  - 구버전 구조(item.questionId, item.questionContent, item.answerBody) 호환
+  - 질문/답변 작성일과 수정일 표시 처리
+  - 답변 대기 상태에서는 수정/삭제 버튼 노출
+  - 더보기 버튼은 초기 hidden 상태로 렌더링하고 외부에서 overflow 감지 후 노출
+*/
+
 import { escapeHtml, escapeAttr } from "../utils/dom.js";
 
 export function renderMyQuestionItem(item) {
-  const questionId = String(item?.questionId ?? "").trim();
+  // 질문 ID 추출(루트/내부 구조 모두 대응)
+  const questionId = pickQuestionId(item);
 
-  const question = safeText(item?.questionContent, "-");
+  // 질문 내용 추출(QnaResponse 기준 우선)
+  const question = safeText(
+    item?.question?.content ?? item?.questionContent ?? item?.content,
+    "-"
+  );
+
+  // 답변 여부
   const hasAnswer = Boolean(item?.hasAnswer);
 
-  const qCreatedRaw = item?.createdAt || "";
-  const qUpdatedRaw = item?.updatedAt || "";
+  // 질문 날짜(QnaResponse 기준 우선)
+  const qCreatedRaw = item?.question?.createdAt ?? item?.createdAt ?? "";
+  const qUpdatedRaw = item?.question?.updatedAt ?? item?.updatedAt ?? "";
   const qCreatedDate = formatDateOnly(qCreatedRaw);
   const qUpdatedDate = formatDateOnly(qUpdatedRaw);
   const qEdited = hasMeaningfulUpdate(qCreatedRaw, qUpdatedRaw);
 
-  const ans = item?.answer || null;
+  // 답변 데이터(QnaResponse 기준 우선, 구버전 호환)
+  const ans = item?.answer ?? item?.answerBody ?? null;
   const answerText = safeText(ans?.content, "");
-  const aCreatedRaw = ans?.createdAt || "";
-  const aUpdatedRaw = ans?.updatedAt || "";
+  const aCreatedRaw = ans?.createdAt ?? "";
+  const aUpdatedRaw = ans?.updatedAt ?? "";
   const aCreatedDate = formatDateOnly(aCreatedRaw);
   const aUpdatedDate = formatDateOnly(aUpdatedRaw);
   const aEdited = hasMeaningfulUpdate(aCreatedRaw, aUpdatedRaw);
 
+  // 상태 칩
   const tone = hasAnswer ? "accepted" : "pending";
   const statusLabel = hasAnswer ? "답변 완료" : "답변 대기";
 
+  // 날짜 라인 구성
   const qDatesLine = buildDatesLine({
     primaryLabel: "질문일",
     primaryValue: qCreatedDate,
@@ -42,11 +62,9 @@ export function renderMyQuestionItem(item) {
       })
     : "";
 
-  // short/full은 항상 렌더링하고, 버튼은 기본 hidden 처리
-  // 렌더 후 overflow 측정해서 필요한 경우에만 버튼을 표시
+  // 더보기 토글용 텍스트(현재는 동일 문자열을 short/full에 넣고, 외부에서 overflow를 기준으로 토글)
   const qShort = question;
   const qFull = question;
-
   const aShort = answerText;
   const aFull = answerText;
 
@@ -144,20 +162,30 @@ export function renderMyQuestionItem(item) {
                 >더보기</button>
               </div>
             `
-            : `<div class="mm-empty">아직 답변이 없다</div>`
+            : `<div class="mm-empty">아직 답변이 없습니다</div>`
         }
       </div>
     </div>
   `;
 }
 
+/*
+  질문 ID 추출
+*/
+function pickQuestionId(it) {
+  return String(it?.questionId ?? it?.question?.questionId ?? "").trim();
+}
+
+/*
+  날짜 라인 렌더링
+*/
 function buildDatesLine({
   primaryLabel,
   primaryValue,
   edited,
   updatedLabel,
   updatedValue,
-}) {
+} = {}) {
   const p = String(primaryValue || "").trim();
   if (!p || p === "-") return "";
 
@@ -170,34 +198,48 @@ function buildDatesLine({
     }
   }
 
-  return parts.join(
-    `<span class="mypage-qna-dot" aria-hidden="true">·</span>`
-  );
+  return parts.join(`<span class="mypage-qna-dot" aria-hidden="true">·</span>`);
 }
 
+/*
+  날짜 라벨 칩 렌더링
+*/
 function renderChipLabel(label) {
   return `<span class="mypage-qna-date-chip" data-no-detail="true">${escapeHtml(
     label
   )}</span>`;
 }
 
+/*
+  날짜 값 렌더링
+*/
 function renderDateValue(value) {
   return `<span class="mypage-qna-date-val" data-no-detail="true">${escapeHtml(
     value
   )}</span>`;
 }
 
-function safeText(v, fallback) {
+/*
+  안전한 문자열 처리
+*/
+function safeText(v, fallback = "") {
   const s = String(v ?? "").trim();
-  return s ? s : fallback ?? "";
+  return s ? s : fallback;
 }
 
+/*
+  날짜(YYYY-MM-DD)만 표시
+*/
 function formatDateOnly(raw) {
-  const s = String(raw || "").trim();
+  const s = String(raw ?? "").trim();
   if (!s) return "-";
   return s.length >= 10 ? s.slice(0, 10) : s;
 }
 
+/*
+  의미 있는 수정 여부 판정
+  - createdAt과 updatedAt을 비교해 실제로 달라졌는지 판단
+*/
 function hasMeaningfulUpdate(createdAt, updatedAt) {
   const cKey = toComparableKey(createdAt);
   const uKey = toComparableKey(updatedAt);
@@ -206,11 +248,17 @@ function hasMeaningfulUpdate(createdAt, updatedAt) {
   return uKey !== cKey;
 }
 
+/*
+  비교용 키 생성
+  - ISO 문자열에서 밀리초의 불필요한 0 제거 후 비교
+*/
 function toComparableKey(dt) {
-  const s = String(dt || "").trim();
+  const s = String(dt ?? "").trim();
   if (!s) return "";
+
   const m = s.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?/);
   if (!m) return s;
+
   const base = m[1];
   const fracRaw = m[2] || "";
   const frac = fracRaw.replace(/0+$/, "");

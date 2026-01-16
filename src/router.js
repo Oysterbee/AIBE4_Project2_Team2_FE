@@ -1,4 +1,14 @@
 // src/router.js
+/*
+  라우터 정책 정리
+  - PUBLIC_PATHS: 비로그인 접근 허용 경로 집합
+  - ROUTES: 정적 경로 렌더러 매핑
+  - DYNAMIC_ROUTES: 파라미터 포함 경로 렌더러 매핑
+  - CSS_BY_ROUTE: 경로별 CSS 파일 매핑
+  - HIDE_HEADER_ON: 헤더 숨김 조건 목록
+  - 마이페이지 모달 잔존 방지: 마이페이지 이탈 시 모달 DOM 제거 및 body 상태 복구 처리
+*/
+
 import { isLoggedIn, getSession, logout } from "./auth/auth.js";
 
 import { renderHome } from "./pages/home.js";
@@ -16,13 +26,14 @@ import { renderMajorRoleRequest } from "./pages/major-role-request.js";
 import { renderMajorRequestDetail } from "./pages/major-role-request-detail.js";
 
 import { renderInterviewCreate } from "./pages/interview-create.js";
-
 import { renderMyMajorProfile } from "./pages/my-major-profile.js";
 
 import { renderRecommend } from "./pages/recommend.js";
 import { renderProfileDetail } from "./pages/major-card-detail.js";
-import { renderManager } from "./pages/manager.js";
 
+/*
+  비로그인 접근 허용 경로 목록
+*/
 const PUBLIC_PATHS = new Set([
   "/login",
   "/signup",
@@ -31,119 +42,209 @@ const PUBLIC_PATHS = new Set([
   "/find-password",
 ]);
 
-const routes = {
+/*
+  정적 라우트 렌더러 매핑
+*/
+const ROUTES = {
   "/": renderHome,
   "/mypage": renderMyPage,
-  "/interview-create/:id": renderInterviewCreate,
   "/apply": renderApply,
   "/major-profile": renderMajorProfile,
   "/major-role-request": renderMajorRoleRequest,
-  "/major-role-request-detail/:id": renderMajorRequestDetail,
-  "/my-major-profile": renderMyMajorProfile,
-  "/major-card-detail/:id": renderProfileDetail,
   "/recommend": renderRecommend,
   "/login": renderLogin,
   "/signup": renderSignup,
   "/oauth/callback": renderOAuthCallback,
   "/find-username": renderFindUsername,
   "/find-password": renderFindPassword,
-  "/manager": renderManager,
 };
 
+/*
+  동적 라우트 목록
+*/
+const DYNAMIC_ROUTES = [
+  { pattern: "/interview-create/:id", render: renderInterviewCreate },
+  {
+    pattern: "/major-role-request-detail/:id",
+    render: renderMajorRequestDetail,
+  },
+  { pattern: "/major-card-detail/:id", render: renderProfileDetail },
+];
+
+/*
+  경로별 CSS 매핑
+*/
+const CSS_BY_ROUTE = [
+  { test: (p) => PUBLIC_PATHS.has(p), files: ["src/css/auth.css"] },
+  { test: (p) => p === "/", files: ["src/css/home.css"] },
+  {
+    test: (p) => p === "/mypage" || p.startsWith("/mypage/"),
+    files: ["src/css/mypage.css"],
+  },
+  { test: (p) => p === "/apply", files: ["src/css/apply.css"] },
+  {
+    test: (p) => p.startsWith("/interview-create/"),
+    files: ["src/css/interview-create.css"],
+  },
+  { test: (p) => p === "/major-profile", files: ["src/css/major-profile.css"] },
+  { test: (p) => p === "/recommend", files: ["src/css/recommend.css"] },
+  {
+    test: (p) => p === "/major-role-request",
+    files: ["src/css/major-role-request.css"],
+  },
+  {
+    test: (p) => p.startsWith("/major-role-request-detail/"),
+    files: ["src/css/major-role-request-detail.css"],
+  },
+  {
+    test: (p) => p.startsWith("/major-card-detail/"),
+    files: ["src/css/profileDetail.css"],
+  },
+];
+
+/*
+  특정 경로에서 헤더 숨김 조건 목록
+*/
+const HIDE_HEADER_ON = [
+  (p) => PUBLIC_PATHS.has(p),
+  (p) => p.startsWith("/major-role-request-detail/"),
+  (p) => p.startsWith("/interview-create/"),
+];
+
+/*
+  마이페이지 모달 잔존 방지용 대상 ID 목록
+*/
+const MYPAGE_MODAL_IDS = [
+  "reviewCreateModal",
+  "reviewEditModal",
+  "reviewDetailModal",
+  "qnaEditModal",
+  "appliedInterviewDetailModal",
+];
+
+/*
+  해시 라우터 이동 함수
+*/
 export function navigate(path) {
   const p = normalizePath(path);
   if (window.location.hash === `#${p}`) return;
   window.location.hash = `#${p}`;
 }
 
+/*
+  라우터 시작 함수
+*/
 export function startRouter() {
   bindHeaderActions();
 
-  // 마이페이지에서 사용자 정보 갱신 이벤트가 오면 헤더 즉시 반영
-  window.addEventListener("mm:user-updated", () => {
-    syncHeaderUser();
-  });
-  // 구버전 이벤트도 호환
-  window.addEventListener("mm:session-updated", () => {
-    syncHeaderUser();
-  });
+  window.addEventListener("mm:user-updated", syncHeaderUser);
+  window.addEventListener("mm:session-updated", syncHeaderUser);
 
   window.addEventListener("hashchange", route);
   route();
 }
 
+/*
+  라우팅 본체 함수
+*/
 function route() {
-  const path = getPath();
   const view = document.getElementById("view");
   if (!view) return;
 
-  const normalizedForGuard = normalizePathForGuard(path);
+  const prevPath = getPrevGuardPath();
+  const path = getPath();
+  const guardPath = normalizePathForGuard(path);
 
-  if (!PUBLIC_PATHS.has(normalizedForGuard) && !isLoggedIn()) {
+  if (prevPath && prevPath !== guardPath) {
+    cleanupOnRouteLeave(prevPath, guardPath);
+  }
+
+  setPrevGuardPath(guardPath);
+
+  if (!PUBLIC_PATHS.has(guardPath) && !isLoggedIn()) {
     navigate("/login");
     return;
   }
 
-  if (PUBLIC_PATHS.has(normalizedForGuard) && isLoggedIn()) {
+  if (PUBLIC_PATHS.has(guardPath) && isLoggedIn()) {
     navigate("/");
     return;
   }
 
-  toggleHeaderForAuth(normalizedForGuard);
-  syncRouteStyles(path);
+  toggleHeader(guardPath);
+  syncRouteStyles(guardPath);
 
-  // 라우팅마다 헤더 동기화(페이지 이동 시)
   syncHeaderUser();
   syncMobileMenuAvailability();
 
   view.innerHTML = "";
 
-  const myInterviewId = matchPath(path, "/mypage/interviews/:id");
-  if (myInterviewId) {
-    renderMyInterviewDetail(view, { id: myInterviewId.id });
+  const dyn = resolveDynamicRoute(path);
+  if (dyn) {
+    dyn.render(view, dyn.params);
     return;
   }
 
-  const myQnaId = matchPath(path, "/mypage/qna/:id");
-  if (myQnaId) {
-    renderMyQnaDetail(view, { id: myQnaId.id });
-    return;
-  }
-
-  const myReviewId = matchPath(path, "/mypage/reviews/:id");
-  if (myReviewId) {
-    renderMyReviewDetail(view, { id: myReviewId.id });
-    return;
-  }
-
-  const interviewerId = matchPath(path, "/interview-create/:id");
-  if (interviewerId) {
-    renderInterviewCreate(view, { id: interviewerId.id });
-    return;
-  }
-
-  const majorReqId = matchPath(path, "/major-role-request-detail/:id");
-  if (majorReqId) {
-    renderMajorRequestDetail(view, { id: majorReqId.id });
-    return;
-  }
-
-  const majorCardId = matchPath(path, "/major-card-detail/:id");
-  if (majorCardId) {
-    renderProfileDetail(view, { id: majorCardId.id });
-    return;
-  }
-
-  const renderer = routes[normalizePathForGuard(path)] || routes["/"];
+  const renderer = ROUTES[guardPath] || ROUTES["/"];
   renderer(view);
 }
 
+/*
+  라우트 이탈 시 정리 처리
+*/
+function cleanupOnRouteLeave(prevGuardPath, nextGuardPath) {
+  if (isMyPagePath(prevGuardPath) && !isMyPagePath(nextGuardPath)) {
+    cleanupMyPageModals();
+  }
+}
+
+/*
+  마이페이지 여부 판단
+*/
+function isMyPagePath(guardPath) {
+  const p = normalizePathForGuard(guardPath);
+  return p === "/mypage" || p.startsWith("/mypage/");
+}
+
+/*
+  마이페이지 모달 정리 처리
+*/
+function cleanupMyPageModals() {
+  for (const id of MYPAGE_MODAL_IDS) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  document.body.classList.remove("mm-modal-open");
+
+  document
+    .querySelectorAll(".mm-modal.is-open")
+    .forEach((el) => el.classList.remove("is-open"));
+}
+
+/*
+  동적 라우트 해석 함수
+*/
+function resolveDynamicRoute(path) {
+  for (const r of DYNAMIC_ROUTES) {
+    const params = matchPath(path, r.pattern);
+    if (params) return { render: r.render, params };
+  }
+  return null;
+}
+
+/*
+  현재 해시에서 경로 추출 함수
+*/
 function getPath() {
   const raw = window.location.hash || "#/";
   const p = raw.startsWith("#") ? raw.slice(1) : raw;
   return normalizePath(p);
 }
 
+/*
+  경로 정규화 함수
+*/
 function normalizePath(p) {
   const s = String(p || "").trim();
   if (!s || s === "#") return "/";
@@ -151,6 +252,9 @@ function normalizePath(p) {
   return s;
 }
 
+/*
+  가드 및 매칭용 경로 정규화 함수
+*/
 function normalizePathForGuard(path) {
   const s = String(path || "").trim();
   if (!s) return "/";
@@ -163,13 +267,15 @@ function normalizePathForGuard(path) {
   return clean || "/";
 }
 
+/*
+  패턴 매칭 함수
+*/
 function matchPath(actualPath, pattern) {
   const actual = normalizePathForGuard(actualPath);
   const patt = normalizePathForGuard(pattern);
 
   const aParts = actual.split("/").filter(Boolean);
   const pParts = patt.split("/").filter(Boolean);
-
   if (aParts.length !== pParts.length) return null;
 
   const params = {};
@@ -187,27 +293,28 @@ function matchPath(actualPath, pattern) {
   return params;
 }
 
-function toggleHeaderForAuth(path) {
+/*
+  헤더 표시/숨김 함수
+*/
+function toggleHeader(path) {
   const header = document.getElementById("siteHeader");
   if (!header) return;
-  const isAuth = PUBLIC_PATHS.has(path);
-  const isDetailPage = path.startsWith("/major-role-request-detail/");
-  const isInterviewPopUp = path.startsWith("/interview-create/");
-  if (isAuth || isDetailPage || isInterviewPopUp) {
-    header.style.display = "none";
-  } else {
-    header.style.display = "";
-  }
+
+  const hidden = HIDE_HEADER_ON.some((fn) => fn(path));
+  header.style.display = hidden ? "none" : "";
 }
 
-function syncRouteStyles(path) {
-  const files = getCssFilesForPath(path);
+/*
+  라우트별 CSS 주입 함수
+*/
+function syncRouteStyles(guardPath) {
   const head = document.head;
 
   head
     .querySelectorAll('link[data-route-style="1"]')
     .forEach((el) => el.remove());
 
+  const files = getCssFilesForPath(guardPath);
   for (const href of files) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
@@ -217,41 +324,30 @@ function syncRouteStyles(path) {
   }
 }
 
-function getCssFilesForPath(path) {
-  const p = normalizePathForGuard(path);
-
-  if (PUBLIC_PATHS.has(p)) return ["src/css/auth.css"];
-  if (p === "/") return ["src/css/home.css"];
-  if (p === "/mypage") return ["src/css/mypage.css"];
-  if (p.startsWith("/mypage/")) return ["src/css/mypage.css"];
-  if (p === "/apply") return ["src/css/apply.css"];
-  if (p.startsWith("/interview-create/"))
-    return ["src/css/interview-create.css"];
-  if (p === "/major-profile") return ["src/css/major-profile.css"];
-  if (p === "/recommend") return ["src/css/recommend.css"];
-  if (p === "/manager") return ["src/css/manager.css"];
-  if (p === "/major-role-request") return ["src/css/major-role-request.css"];
-  if (p.startsWith("/major-role-request-detail/"))
-    return ["src/css/major-role-request-detail.css"];
-  if (p.startsWith("/major-card-detail/")) return ["src/css/profileDetail.css"];
+/*
+  경로에 해당하는 CSS 파일 목록 반환 함수
+*/
+function getCssFilesForPath(guardPath) {
+  for (const rule of CSS_BY_ROUTE) {
+    if (rule.test(guardPath)) return rule.files;
+  }
   return [];
 }
 
+/*
+  헤더 액션 바인딩 함수
+*/
 function bindHeaderActions() {
   const mypageBtn = document.getElementById("btnMyPage");
-  const managerBtn = document.getElementById("btnManager");
   const logoutBtn = document.getElementById("btnLogout");
 
   const avatarBtn = document.getElementById("avatarBtn");
 
   const menu = document.getElementById("userMenu");
   const menuMyPage = document.getElementById("menuMyPage");
-  const menuManager = document.getElementById("menuManager");
   const menuLogout = document.getElementById("menuLogout");
 
   if (mypageBtn) mypageBtn.addEventListener("click", () => navigate("/mypage"));
-  if (managerBtn)
-    managerBtn.addEventListener("click", () => navigate("/manager"));
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
@@ -268,13 +364,6 @@ function bindHeaderActions() {
     });
   }
 
-  if (menuManager) {
-    menuManager.addEventListener("click", () => {
-      closeUserMenu();
-      navigate("/manager");
-    });
-  }
-
   if (menuLogout) {
     menuLogout.addEventListener("click", async () => {
       await logout();
@@ -286,7 +375,7 @@ function bindHeaderActions() {
   if (avatarBtn) {
     avatarBtn.addEventListener("click", () => {
       if (!isMobileHeaderMode()) return;
-      toggleUserMenu();
+      toggleUserMenu(menu);
     });
   }
 
@@ -306,13 +395,28 @@ function bindHeaderActions() {
     syncMobileMenuAvailability();
     if (!isMobileHeaderMode()) closeUserMenu();
   });
-
-  function toggleUserMenu() {
-    if (!menu) return;
-    menu.classList.toggle("open");
-  }
 }
 
+/*
+  유저 메뉴 토글 함수
+*/
+function toggleUserMenu(menu) {
+  if (!menu) return;
+  menu.classList.toggle("open");
+}
+
+/*
+  유저 메뉴 닫기 함수
+*/
+function closeUserMenu() {
+  const menu = document.getElementById("userMenu");
+  if (!menu) return;
+  menu.classList.remove("open");
+}
+
+/*
+  헤더 유저 정보 동기화 함수
+*/
 function syncHeaderUser() {
   const session = getSession();
   const user = session?.user || null;
@@ -321,27 +425,19 @@ function syncHeaderUser() {
   const menuNick = document.getElementById("menuNickname");
 
   const links = document.getElementById("userLinks");
-  const isAuth = isLoggedIn();
-  if (links) links.style.visibility = isAuth ? "visible" : "hidden";
+  const authed = isLoggedIn();
+  if (links) links.style.visibility = authed ? "visible" : "hidden";
 
   const nick = String(user?.nickname || "").trim() || "사용자";
   if (deskNick) deskNick.textContent = nick;
   if (menuNick) menuNick.textContent = nick;
 
-  // 헤더 아바타(프로필 이미지) 반영
   applyHeaderAvatar(user?.profileImageUrl);
-
-  // 관리자 버튼 표시
-  const role = String(user?.role || "").trim();
-  const isManager = role === "ADMIN" || role === "관리자";
-
-  const managerBtn = document.getElementById("btnManager");
-  const menuManager = document.getElementById("menuManager");
-
-  if (managerBtn) managerBtn.style.display = isManager ? "" : "none";
-  if (menuManager) menuManager.style.display = isManager ? "" : "none";
 }
 
+/*
+  헤더 아바타 반영 함수
+*/
 function applyHeaderAvatar(profileImageUrl) {
   const url = String(profileImageUrl || "").trim();
   const avatarSpan = document.querySelector("#avatarBtn .avatar");
@@ -361,19 +457,39 @@ function applyHeaderAvatar(profileImageUrl) {
   avatarSpan.style.backgroundRepeat = "no-repeat";
 }
 
-function closeUserMenu() {
-  const menu = document.getElementById("userMenu");
-  if (!menu) return;
-  menu.classList.remove("open");
-}
-
+/*
+  모바일 헤더 모드 판단 함수
+*/
 function isMobileHeaderMode() {
   return window.matchMedia("(max-width: 720px)").matches;
 }
 
+/*
+  모바일 모드에서만 아바타 버튼 활성화 처리
+*/
 function syncMobileMenuAvailability() {
   const avatarBtn = document.getElementById("avatarBtn");
   if (!avatarBtn) return;
-  avatarBtn.disabled = !isMobileHeaderMode();
-  avatarBtn.classList.toggle("avatar-btn--disabled", !isMobileHeaderMode());
+  const mobile = isMobileHeaderMode();
+  avatarBtn.disabled = !mobile;
+  avatarBtn.classList.toggle("avatar-btn--disabled", !mobile);
+}
+
+/*
+  이전 가드 경로 저장용 유틸
+*/
+const PREV_GUARD_KEY = "__mm_prev_guard_path__";
+
+function getPrevGuardPath() {
+  try {
+    return sessionStorage.getItem(PREV_GUARD_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function setPrevGuardPath(path) {
+  try {
+    sessionStorage.setItem(PREV_GUARD_KEY, String(path || ""));
+  } catch {}
 }
