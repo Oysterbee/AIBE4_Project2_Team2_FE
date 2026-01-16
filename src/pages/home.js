@@ -31,7 +31,14 @@ export async function renderHome(root) {
     await withOverlayLoading(
       async () => {
         try {
-          let url = `/major-profiles?page=${state.page - 1}&size=${PAGE_SIZE}`;
+          let url = "";
+          if (state.page === 1) {
+            url = `/major-profiles?page=${state.page - 1}&size=${PAGE_SIZE}`;
+          } else {
+            url = `/major-profiles?page=${state.page - 1}&size=${
+              PAGE_SIZE + 1
+            }`;
+          }
 
           if (state.query && state.query.trim()) {
             const query = state.query.trim();
