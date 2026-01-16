@@ -59,6 +59,20 @@
 
         <div class="header-right" id="headerRight">
           <div class="user-links" id="userLinks">
+            <div class="notification-container">
+                  <button class="notification-btn" id="notificationBtn" type="button" aria-label="알림 확인">
+                    🔔 <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                  </button>
+                  <div class="notification-popup" id="notificationPopup">
+                    <div class="notification-header">
+                      <span>알림</span>
+                      <button id="closeNotification" class="close-btn">&times;</button>
+                    </div>
+                    <ul class="notification-list" id="notificationList">
+                      <li class="empty-msg">새로운 알림이 없습니다.</li>
+                    </ul>
+                  </div>
+                </div>
             <span class="user-nickname" id="deskNickname">사용자</span>
             <button class="user-link as-button" type="button" id="btnMyPage">
               마이페이지

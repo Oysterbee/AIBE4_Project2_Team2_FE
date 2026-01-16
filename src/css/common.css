@@ -602,3 +602,79 @@ button {
     display: none;
   }
 }
+
+.notification-container { position: relative; display: flex; align-items: center; margin-right: 15px; cursor: pointer; }
+
+/* 종 모양 아이콘 버튼 */
+.notification-btn {
+    background: none; border: none; font-size: 1.5rem; cursor: pointer;
+    padding: 5px; position: relative; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+}
+.notification-btn:hover { transform: scale(1.1); }
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ff3b30; /* 빨간색 */
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%; /* 동그라미 */
+  
+  /* 내용물 중앙 정렬 */
+  display: none; /* 기본은 숨김 (JS가 켜줌) */
+  align-items: center;
+  justify-content: center;
+  
+  transform: translate(25%, -25%); /* 우측 상단에 걸치기 */
+  box-shadow: 0 0 0 2px #fff; /* 흰색 테두리 */
+  z-index: 10;
+}
+
+/* 팝업 창 */
+.notification-popup {
+    display: none; position: absolute; top: 140%; right: -60px;
+    width: 320px; background: white;
+    border: 1px solid #e1e1e1; border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 2000; overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+.notification-popup.active { display: block; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 팝업 헤더 */
+.notification-header {
+    padding: 12px 16px; background-color: #f8f9fa; border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600; color: #333;
+}
+.header-title-area { display: flex; align-items: center; gap: 8px; }
+.unread-count-text { color: #007bff; font-size: 0.85rem; font-weight: bold; }
+
+.close-btn { background: none; border: none; font-size: 1.5rem; line-height: 1; color: #999; cursor: pointer; }
+
+/* 알림 리스트 */
+.notification-list { list-style: none; padding: 0; margin: 0; max-height: 350px; overflow-y: auto; }
+
+/* 개별 알림 항목 (안 읽음 상태 강조) */
+.notification-item {
+    padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer;
+    background-color: #f0f8ff; /* 연한 파란색 배경 (안 읽음 표시) */
+    transition: background 0.2s;
+}
+.notification-item:hover { background-color: #e3f2fd; } /* 호버 시 더 진하게 */
+
+.noti-type { font-size: 0.8rem; color: #007bff; font-weight: bold; margin-bottom: 4px; display: block; }
+.noti-content { font-size: 0.9rem; color: #333; line-height: 1.4; display: block; }
+.noti-time { font-size: 0.75rem; color: #aaa; margin-top: 6px; display: block; text-align: right; }
+
+.empty-msg { text-align: center; color: #999; padding: 30px 0 !important; cursor: default !important; background: white; }
