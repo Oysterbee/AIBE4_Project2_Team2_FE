@@ -55,11 +55,13 @@ export function renderFindPassword(root) {
               <div class="auth-row">
                 <label class="auth-label">새 비밀번호</label>
                 <input class="auth-input" id="newPasswordInput" type="password" placeholder="영문, 숫자, 특수기호 포함 8자 이상" />
+                <div id="newPasswordStatus" class="auth-verification-status"></div>
               </div>
 
               <div class="auth-row">
                 <label class="auth-label">새 비밀번호 확인</label>
                 <input class="auth-input" id="newPasswordConfirmInput" type="password" placeholder="비밀번호를 다시 입력하세요" />
+                <div id="newPasswordConfirmStatus" class="auth-verification-status"></div>
               </div>
 
               <button class="auth-primary" type="button" id="resetPasswordBtn">비밀번호 변경</button>
@@ -94,11 +96,83 @@ export function renderFindPassword(root) {
   const passwordResetSection = wrap.querySelector("#passwordResetSection");
   const newPasswordInput = wrap.querySelector("#newPasswordInput");
   const newPasswordConfirmInput = wrap.querySelector("#newPasswordConfirmInput");
+  const newPasswordStatus = wrap.querySelector("#newPasswordStatus");
+  const newPasswordConfirmStatus = wrap.querySelector("#newPasswordConfirmStatus");
   const resetPasswordBtn = wrap.querySelector("#resetPasswordBtn");
   const toLogin = wrap.querySelector("#toLogin");
   const toFindUsername = wrap.querySelector("#toFindUsername");
 
   let isEmailVerified = false;
+
+  // 비밀번호 검증 함수
+  function validatePassword(password) {
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const isLengthValid = password.length >= 8 && password.length <= 20;
+
+    return {
+      valid: isLengthValid && hasLetter && hasNumber && hasSpecial,
+      hasLetter,
+      hasNumber,
+      hasSpecial,
+      isLengthValid,
+    };
+  }
+
+  // 비밀번호 확인 검증 함수
+  function validatePasswordConfirm() {
+    const password = newPasswordInput.value;
+    const passwordConfirm = newPasswordConfirmInput.value;
+
+    if (!passwordConfirm) {
+      newPasswordConfirmStatus.textContent = "";
+      newPasswordConfirmStatus.className = "auth-verification-status";
+      return;
+    }
+
+    if (password === passwordConfirm) {
+      newPasswordConfirmStatus.textContent = "✓ 비밀번호가 일치합니다";
+      newPasswordConfirmStatus.className = "auth-verification-status success";
+    } else {
+      newPasswordConfirmStatus.textContent = "비밀번호가 일치하지 않습니다";
+      newPasswordConfirmStatus.className = "auth-verification-status error";
+    }
+  }
+
+  // 실시간 새 비밀번호 검증
+  newPasswordInput.addEventListener("input", (e) => {
+    const password = e.target.value;
+    const validation = validatePassword(password);
+
+    if (!password) {
+      newPasswordStatus.textContent = "";
+      newPasswordStatus.className = "auth-verification-status";
+      return;
+    }
+
+    if (validation.valid) {
+      newPasswordStatus.textContent = "✓ 사용 가능한 비밀번호입니다";
+      newPasswordStatus.className = "auth-verification-status success";
+    } else {
+      const errors = [];
+      if (!validation.isLengthValid) errors.push("8자 이상 20자 이하");
+      if (!validation.hasLetter) errors.push("영문자");
+      if (!validation.hasNumber) errors.push("숫자");
+      if (!validation.hasSpecial) errors.push("특수기호");
+
+      newPasswordStatus.textContent = `필요: ${errors.join(", ")}`;
+      newPasswordStatus.className = "auth-verification-status error";
+    }
+
+    // 비밀번호 확인 필드도 체크
+    if (newPasswordConfirmInput.value) {
+      validatePasswordConfirm();
+    }
+  });
+
+  // 실시간 비밀번호 확인 검증
+  newPasswordConfirmInput.addEventListener("input", validatePasswordConfirm);
 
   // 이메일 인증 코드 발송
   sendVerificationBtn.addEventListener("click", async () => {
@@ -242,8 +316,10 @@ export function renderFindPassword(root) {
       return;
     }
 
-    if (!newPassword || newPassword.length < 8) {
-      alert("비밀번호는 8자 이상이어야 합니다");
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
+      alert("비밀번호는 영문자, 숫자, 특수기호를 포함해 8자 이상 20자 이하이어야 합니다");
+      newPasswordInput.focus();
       return;
     }
 
