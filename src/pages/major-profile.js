@@ -38,10 +38,32 @@ export async function renderMajorProfile(root) {
   const statusInfo = getStatusDisplay(user.applicationStatus);
   const isAccepted = user.applicationStatus === "ACCEPTED";
 
+  // url에서 tab 파라미터 추출
+  const hash = window.location.hash;
+  const queryPart = hash.includes("?") ? hash.split("?")[1] : "";
+  const params = new URLSearchParams(queryPart);
+  const requestedTab = params.get("tab");
+
+  let initialTab = isAccepted ? "profile" : "request"; // 기본값
+  // 요청된 탭이 존재하고, '인증된 사용자'만 갈 수 있는 탭이라면 isAccepted 체크
+  if (requestedTab) {
+      const protectedTabs = ["profile", "interviews", "qna", "review"];
+      
+      // 보호된 탭인데 인증받은 경우 OR 보호되지 않은 탭인 경우 -> 이동 허용
+      if (protectedTabs.includes(requestedTab)) {
+          if (isAccepted) {
+              initialTab = requestedTab;
+          }
+      } else {
+          // 그 외 탭(존재한다면)
+          initialTab = requestedTab;
+      }
+  }
+
   const wrap = document.createElement("div");
   wrap.className = "mj-container";
 
-  wrap.innerHTML = `
+wrap.innerHTML = `
     <header class="mj-header">
       <div class="mj-header__main">
         <div class="mj-avatar" style="background-image: url('${
@@ -93,19 +115,28 @@ export async function renderMajorProfile(root) {
   const contentArea = wrap.querySelector("#contentArea");
   const tabs = wrap.querySelectorAll(".mj-tab");
 
+  // 탭 클릭 이벤트 설정 (기존 로직 유지)
   tabs.forEach((tab) => {
-    tab.onclick = async () => {
-      const target = tab.dataset.tab;
+    // 1. 인증 상태에 따라 비활성화 클래스 처리
+    const target = tab.dataset.tab;
+    const protectedTabs = ["profile", "interviews", "qna", "review"];
+    
+    if (protectedTabs.includes(target) && !isAccepted) {
+        tab.classList.add("is-disabled");
+    }
 
-      const protectedTabs = ["profile", "interviews", "qna", "review"];
+    tab.onclick = async () => {
+      // 권한 체크
       if (protectedTabs.includes(target) && !isAccepted) {
         alert("전공자 인증이 완료된 후에 이용 가능합니다.");
         return;
       }
 
+      // UI 업데이트
       tabs.forEach((t) => t.classList.remove("is-active"));
       tab.classList.add("is-active");
 
+      // 데이터 로드
       await withOverlayLoading(
         async () => {
           await loadTabData(target, contentArea, user);
@@ -115,9 +146,12 @@ export async function renderMajorProfile(root) {
     };
   });
 
-  const initialTab = isAccepted ? "profile" : "request";
+  // 모든 탭에서 active 제거 후 initialTab에만 추가
+  tabs.forEach(t => t.classList.remove("is-active"));
+  const activeTabBtn = wrap.querySelector(`.mj-tab[data-tab="${initialTab}"]`);
+  if (activeTabBtn) activeTabBtn.classList.add("is-active");
 
-  // 초기 로드: 인증됨 -> 프로필, 그 외 -> 인증 현황
+  // 초기 데이터 로드
   await withOverlayLoading(
     async () => {
       await loadTabData(initialTab, contentArea, user);
